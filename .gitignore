@@ -1,0 +1,30 @@
+# Maven build output
+target/
+*.jar
+*.war
+*.ear
+
+# Maven wrapper
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE files
+.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+*.swp
+*.swo
+.DS_Store
+
+# Environment files with secrets
+.env
+*.env.local
+
+# Docker volumes
+postgres_data/
+
+# OS files
+Thumbs.db

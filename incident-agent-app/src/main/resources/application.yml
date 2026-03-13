@@ -1,0 +1,86 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: incident-agent-app
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/itii_db}
+    username: ${DB_USERNAME:itii}
+    password: ${DB_PASSWORD:itii_secret}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      idle-timeout: 300000
+      connection-timeout: 20000
+
+  jpa:
+    # The agent-app does NOT own the schema — it relies on the MCP server's
+    # Flyway migrations. Hibernate validates the schema on startup to confirm
+    # the expected tables exist.
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  # The agent-app has its OWN Flyway history table (flyway_schema_history_agent)
+  # so it does not conflict with the MCP server's flyway history.
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    table: flyway_schema_history_agent
+    baseline-on-migrate: true
+
+  # ─── Spring AI OpenAI ────────────────────────────────────────────────────────
+  # API key is NEVER committed — must be provided via environment variable.
+  # Set OPENAI_API_KEY in docker-compose.yml or your shell before running.
+  # ─────────────────────────────────────────────────────────────────────────────
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:change-me-set-OPENAI_API_KEY-env-var}
+      chat:
+        options:
+          model: gpt-4o-mini        # Cost-effective; upgrade to gpt-4o for better reasoning
+          temperature: 0.2          # Low temperature = more deterministic/factual responses
+          max-tokens: 2000          # Sufficient for structured responses
+
+    # ─── Spring AI MCP Client ───────────────────────────────────────────────
+    # Connects to the incident-mcp-server (running in Docker as "mcp-server").
+    # The starter auto-creates McpSyncClient beans and a ToolCallbackProvider.
+    # The ToolCallbackProvider is injected into the ChatClient so that when the
+    # LLM requests a tool call, the client forwards it to the MCP server.
+    # ────────────────────────────────────────────────────────────────────────
+    mcp:
+      client:
+        enabled: true
+        name: incident-agent-client
+        version: 1.0.0
+        type: SYNC
+        toolcallback:
+          enabled: true
+        sse:
+          connections:
+            # Connection name — used for logging and diagnostics only
+            incident-mcp-server:
+              url: ${MCP_SERVER_URL:http://localhost:8081}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+logging:
+  level:
+    root: INFO
+    dev.pekelund.ai: DEBUG
+    org.springframework.ai: INFO
+    org.springframework.ai.mcp: DEBUG   # Show MCP tool calls for learning
