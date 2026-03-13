@@ -7,7 +7,7 @@
 #   agent-app      — Incident Agent App  (AI agents + REST API)
 #
 # Quick start:
-#   export OPENAI_API_KEY=sk-...
+#   export GEMINI_API_KEY=AIza...
 #   docker compose up --build
 #
 # API is available at http://localhost:8080
@@ -76,8 +76,9 @@ services:
       DB_USERNAME:    itii
       DB_PASSWORD:    itii_secret
       MCP_SERVER_URL: http://mcp-server:8081
-      # ⚠️  Set your OpenAI API key here or via 'export OPENAI_API_KEY=...' before running
-      OPENAI_API_KEY: ${OPENAI_API_KEY:change-me}
+      # ⚠️  Set your Gemini API key here or via 'export GEMINI_API_KEY=...' before running
+      # Get your free key at https://ai.google.dev/
+      GEMINI_API_KEY: ${GEMINI_API_KEY:change-me}
       SPRING_PROFILES_ACTIVE: default
     ports:
       - "8080:8080"

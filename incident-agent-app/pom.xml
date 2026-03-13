@@ -42,13 +42,14 @@
         </dependency>
 
         <!--
-            Spring AI OpenAI Starter (new naming in 1.1.x).
-            Provides the ChatClient backed by the OpenAI API (GPT-4o or GPT-4o-mini).
-            The model is configurable via environment variable OPENAI_API_KEY.
+            Spring AI Google GenAI Starter.
+            Provides the ChatClient backed by the Google Gemini API.
+            The model is configurable via the GEMINI_API_KEY environment variable.
+            Get your free API key at https://ai.google.dev/
         -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-starter-model-openai</artifactId>
+            <artifactId>spring-ai-starter-model-google-genai</artifactId>
         </dependency>
 
         <!--

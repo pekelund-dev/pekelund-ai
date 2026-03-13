@@ -1,7 +1,7 @@
 # IT Incident Intelligence Platform (ITII)
 
 An AI-powered incident response system built with **Java 17**, **Spring Boot 3.3**,
-**Spring AI 1.1.0** and the **Model Context Protocol (MCP)**.
+**Spring AI 1.1.0**, the **Model Context Protocol (MCP)** and the **Agent-to-Agent (A2A) Protocol**.
 
 > **Best practices** — note the spelling! (not "practises" for the noun form in software engineering context)
 
@@ -91,9 +91,64 @@ call external tools. Think of it as a **USB standard for AI tools**:
 This decoupling means the same MCP server can be reused by many different AI applications,
 and tools can be developed, versioned and deployed independently of the AI agents.
 
+### What is A2A (Agent-to-Agent Protocol)?
+
+A2A is an open standard (by Google, 2025) that defines how AI agents discover and talk to
+**each other** — regardless of vendor, framework or programming language. Think of it as the
+**HTTP for agent interoperability**:
+
+- Every A2A agent publishes an **Agent Card** at `GET /.well-known/agent.json` describing
+  its skills, input/output formats and task endpoint
+- Clients POST **JSON-RPC 2.0** messages to the agent's task endpoint (`/a2a`)
+- The agent executes the task and returns a structured **Task** response with status and
+  content parts
+- Agents can call **other agents** as sub-tasks, enabling true multi-agent collaboration
+
+#### ITII A2A Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/.well-known/agent.json` | `GET` | Agent card — lists skills and task URL |
+| `/a2a` | `POST` | JSON-RPC task handler |
+
+#### A2A Skills
+
+| Skill ID | Description |
+|----------|-------------|
+| `incident_analysis` | Full pipeline: triage + root-cause diagnosis + summary (default) |
+| `incident_triage`   | Fast triage only — severity, category, affected services |
+
+#### Example A2A Request
+
+```bash
+# Discover the agent
+curl http://localhost:8080/.well-known/agent.json
+
+# Submit a task (full analysis)
+curl -X POST http://localhost:8080/a2a \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": "req-1",
+    "method": "tasks/send",
+    "params": {
+      "id": "task-abc123",
+      "skillId": "incident_analysis",
+      "message": {
+        "role": "user",
+        "parts": [{"type": "text/plain", "text": "title: Payment 503\ndescription: Error rate at 80% since 5 minutes ago"}]
+      }
+    }
+  }'
+
+# Retrieve the completed task
+curl -X POST http://localhost:8080/a2a \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":"req-2","method":"tasks/get","params":{"id":"task-abc123"}}'
+```
+
 ---
 
-## Project Structure
 
 ```
 pekelund-ai/
@@ -120,10 +175,13 @@ pekelund-ai/
 │   └── src/main/java/dev/pekelund/ai/agent/
 │       ├── IncidentAgentApplication.java
 │       ├── config/AgentConfig.java           ChatClient + MCP wiring
-│       ├── agent/
-│       │   ├── TriageAgent.java              Severity/category classification
-│       │   ├── DiagnosisAgent.java           Root-cause analysis
-│       │   └── IncidentOrchestrator.java     Pipeline coordinator
+│       ├── TriageAgent.java                  Severity/category classification
+│       ├── DiagnosisAgent.java               Root-cause analysis
+│       ├── IncidentOrchestrator.java         Pipeline coordinator
+│       ├── a2a/                              A2A Protocol implementation
+│       │   ├── A2AController.java            Agent card + JSON-RPC endpoint
+│       │   ├── A2ATaskService.java           Task routing to agents
+│       │   └── ...                           A2A DTOs (Task, Message, AgentCard…)
 │       ├── domain/                           JPA entities (validates schema)
 │       ├── dto/                              Request/Response records
 │       ├── repository/                       Spring Data repositories
@@ -143,7 +201,7 @@ pekelund-ai/
 |-------------|-----------|--------------------------|
 | Docker      | 20.10+    | Container runtime        |
 | Docker Compose | v2+   | Service orchestration    |
-| OpenAI API key | -      | LLM for AI agents        |
+| Gemini API key | -      | LLM for AI agents (free at [ai.google.dev](https://ai.google.dev)) |
 | Java 17+    | (optional)| For local development    |
 | Maven 3.9+  | (optional)| For local development    |
 
@@ -156,8 +214,8 @@ pekelund-ai/
 git clone https://github.com/pekelund-dev/pekelund-ai.git
 cd pekelund-ai
 
-# 2. Set your OpenAI API key
-export OPENAI_API_KEY=sk-your-key-here
+# 2. Set your Gemini API key (free at https://ai.google.dev/)
+export GEMINI_API_KEY=AIza-your-key-here
 
 # 3. Build and start all services
 docker compose up --build
@@ -187,6 +245,13 @@ All endpoints are on `http://localhost:8080`.
 | `PUT` | `/api/incidents/{id}/status` | Update status |
 | `POST` | `/api/incidents/{id}/notes` | Add manual note |
 | `POST` | `/api/incidents/{id}/analyse` | **Trigger AI analysis** |
+
+### A2A Protocol
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/.well-known/agent.json` | Agent card (A2A discovery) |
+| `POST` | `/a2a` | JSON-RPC 2.0 task operations (`tasks/send`, `tasks/get`, `tasks/cancel`) |
 
 ### Demo
 
@@ -247,11 +312,12 @@ service:
 - The same tool server could serve multiple agent applications
 - Tool implementations are isolated from AI logic
 
-### Why `gpt-4o-mini`?
+### Why `gemini-2.0-flash`?
 
-Balances cost and capability for this demo. The structured output format in the agent
-system prompts compensates for the reduced reasoning depth. Upgrading to `gpt-4o` in
-`application.yml` improves analysis quality.
+Google's Gemini 2.0 Flash offers excellent reasoning at low cost and has a generous free
+tier via the [Gemini Developer API](https://ai.google.dev/). For deeper analysis, switch
+to `gemini-1.5-pro` in `application.yml`. The structured output format in the agent system
+prompts means any capable Gemini model works well.
 
 ### Why synchronous MCP (SYNC mode)?
 
@@ -281,7 +347,7 @@ mvn spring-boot:run
 
 # Run agent app (in a new terminal)
 cd incident-agent-app
-OPENAI_API_KEY=sk-your-key mvn spring-boot:run
+GEMINI_API_KEY=AIza-your-key mvn spring-boot:run
 
 # Run tests (no external services needed — uses H2 and mocks)
 mvn test
@@ -293,7 +359,7 @@ mvn test
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `OPENAI_API_KEY` | *(required)* | OpenAI API key |
+| `GEMINI_API_KEY` | *(required)* | Google Gemini API key (get free at [ai.google.dev](https://ai.google.dev)) |
 | `DB_URL` | `jdbc:postgresql://localhost:5432/itii_db` | JDBC connection URL |
 | `DB_USERNAME` | `itii` | Database username |
 | `DB_PASSWORD` | `itii_secret` | Database password |
@@ -303,7 +369,7 @@ mvn test
 
 ## Learning Resources
 
-This project demonstrates several advanced Spring AI and MCP concepts:
+This project demonstrates several advanced Spring AI, MCP and A2A concepts:
 
 | Concept | Where to look |
 |---------|---------------|
@@ -315,3 +381,7 @@ This project demonstrates several advanced Spring AI and MCP concepts:
 | System prompts | System prompt constants in each agent class |
 | Structured output parsing | `IncidentOrchestrator.parseField()` |
 | Spring AI ChatClient | `AgentConfig.java` |
+| **A2A Agent Card** | `A2AController.agentCard()` |
+| **A2A Task handling** | `A2AController.handleTask()`, `A2ATaskService` |
+| **A2A Protocol DTOs** | `dev.pekelund.ai.agent.a2a` package |
+| **Gemini integration** | `application.yml` (`spring.ai.google.genai`) |

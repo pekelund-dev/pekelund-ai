@@ -13,11 +13,12 @@ spring:
     enabled: false
 
   ai:
-    openai:
-      api-key: test-key
-      chat:
-        options:
-          model: gpt-4o-mini
+    google:
+      genai:
+        api-key: test-key
+        chat:
+          options:
+            model: gemini-2.0-flash
     mcp:
       client:
         enabled: false  # Disable MCP client so no connection is attempted in tests

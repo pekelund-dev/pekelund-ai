@@ -43,7 +43,7 @@ public class AgentConfig {
     /**
      * Creates a shared {@link ChatClient} pre-loaded with all MCP tool callbacks.
      *
-     * @param builder               Spring AI's auto-configured builder (connected to OpenAI)
+     * @param builder               Spring AI's auto-configured builder (connected to Gemini)
      * @param toolCallbackProvider  optional tool callbacks from MCP client connections;
      *                              absent when {@code spring.ai.mcp.client.enabled=false}
      */

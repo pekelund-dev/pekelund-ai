@@ -36,18 +36,19 @@ spring:
     table: flyway_schema_history_agent
     baseline-on-migrate: true
 
-  # ─── Spring AI OpenAI ────────────────────────────────────────────────────────
+  # ─── Spring AI Google GenAI (Gemini) ────────────────────────────────────────
   # API key is NEVER committed — must be provided via environment variable.
-  # Set OPENAI_API_KEY in docker-compose.yml or your shell before running.
+  # Get your free Gemini API key at https://ai.google.dev/
+  # Set GEMINI_API_KEY in docker-compose.yml or your shell before running.
   # ─────────────────────────────────────────────────────────────────────────────
   ai:
-    openai:
-      api-key: ${OPENAI_API_KEY:change-me-set-OPENAI_API_KEY-env-var}
-      chat:
-        options:
-          model: gpt-4o-mini        # Cost-effective; upgrade to gpt-4o for better reasoning
-          temperature: 0.2          # Low temperature = more deterministic/factual responses
-          max-tokens: 2000          # Sufficient for structured responses
+    google:
+      genai:
+        api-key: ${GEMINI_API_KEY:change-me-set-GEMINI_API_KEY-env-var}
+        chat:
+          options:
+            model: gemini-2.0-flash      # Fast, cost-effective; upgrade to gemini-1.5-pro for deeper reasoning
+            temperature: 0.2             # Low temperature = more deterministic/factual responses
 
     # ─── Spring AI MCP Client ───────────────────────────────────────────────
     # Connects to the incident-mcp-server (running in Docker as "mcp-server").
