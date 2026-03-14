@@ -171,7 +171,7 @@ public class MarketAnalysisTools {
             double ma200 = prices.size() >= 200 ? calculateMovingAverage(prices, 200) : Double.NaN;
 
             String trendStatus = evaluateTrend(currentPrice, ma50, ma200);
-            String kavastuvSuitability = getTrendSuitability(currentPrice, ma50, ma200);
+            String kavastuSuitability = getTrendSuitability(currentPrice, ma50, ma200);
 
             StringBuilder result = new StringBuilder();
             result.append("Trendanalys för %s:%n".formatted(symbol));
@@ -182,7 +182,7 @@ public class MarketAnalysisTools {
                 result.append("MA200 (200-dagars): %.2f%n".formatted(ma200));
             }
             result.append("%nTrendstatus: %s%n".formatted(trendStatus));
-            result.append("Kavastu-lämplighet: %s%n".formatted(kavastuvSuitability));
+            result.append("Kavastu-lämplighet: %s%n".formatted(kavastuSuitability));
 
             // Add Golden/Death Cross info if MA200 is available
             if (!Double.isNaN(ma200)) {

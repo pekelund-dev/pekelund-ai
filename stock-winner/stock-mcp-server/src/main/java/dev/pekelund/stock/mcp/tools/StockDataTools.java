@@ -171,7 +171,7 @@ public class StockDataTools {
                 - SEB-A.ST      : SEB A (bank)
                 - SHB-A.ST      : Handelsbanken A (bank)
                 - SWED-A.ST     : Swedbank A (bank)
-                - NDA-SE.ST     : Nordea Bank (bank)
+                - NDA.ST        : Nordea Bank (bank)
                 - INVE-B.ST     : Investor B (investmentbolag)
                 - SAND.ST       : Sandvik (industri/gruvutrustning)
                 - SKF-B.ST      : SKF B (lager och tätningar)
