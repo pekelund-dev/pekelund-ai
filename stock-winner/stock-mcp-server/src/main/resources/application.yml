@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: stock-mcp-server
+  ai:
+    mcp:
+      server:
+        name: stock-mcp-server
+        version: 1.0.0
+        description: "MCP server for Swedish stock market data and Kavastu strategy analysis"
+
+server:
+  port: 8083
+
+logging:
+  level:
+    dev.pekelund: DEBUG
+    org.springframework.ai: INFO

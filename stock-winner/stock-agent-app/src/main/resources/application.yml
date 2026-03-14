@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: stock-agent-app
+  ai:
+    google:
+      genai:
+        api-key: ${GEMINI_API_KEY}
+        chat:
+          options:
+            model: gemini-2.0-flash
+    mcp:
+      client:
+        enabled: true
+        toolcallback:
+          enabled: true
+        sse:
+          connections:
+            stock-mcp-server:
+              url: http://localhost:8083
+    a2a:
+      server:
+        enabled: true
+
+server:
+  port: 8082
+  servlet:
+    context-path: /a2a
+
+logging:
+  level:
+    dev.pekelund: DEBUG
+    org.springframework.ai: INFO
+    io.a2a: INFO
