@@ -167,43 +167,44 @@ curl http://localhost:8080/a2a/tasks/{taskId}
 
 ```
 pekelund-ai/
-├── pom.xml                          Parent POM (dependency management)
-│
-├── incident-mcp-server/             MCP Server module
-│   ├── pom.xml
-│   ├── Dockerfile
-│   └── src/main/java/dev/pekelund/ai/mcp/
-│       ├── IncidentMcpServerApplication.java
-│       ├── config/McpServerConfig.java       Tool registration
-│       ├── domain/                           JPA entities (owns full schema)
-│       ├── repository/                       Spring Data repositories
-│       └── tool/                             @Tool-annotated MCP tool implementations
-│           ├── LogQueryTool.java
-│           ├── MetricsQueryTool.java
-│           ├── RunbookSearchTool.java
-│           ├── IncidentHistoryTool.java
-│           └── ServiceStatusTool.java
-│
-├── incident-agent-app/              Agent Application module
-│   ├── pom.xml
-│   ├── Dockerfile
-│   └── src/main/java/dev/pekelund/ai/agent/
-│       ├── IncidentAgentApplication.java
-│       ├── config/
-│       │   ├── AgentConfig.java              ChatClient + MCP wiring
-│       │   └── A2AConfig.java                AgentCard + AgentExecutor beans (A2A)
-│       ├── TriageAgent.java                  Severity/category classification
-│       ├── DiagnosisAgent.java               Root-cause analysis
-│       ├── IncidentOrchestrator.java         Pipeline coordinator
-│       ├── domain/                           JPA entities (validates schema)
-│       ├── dto/                              Request/Response records
-│       ├── repository/                       Spring Data repositories
-│       ├── service/IncidentService.java      Business logic
-│       └── controller/
-│           ├── IncidentController.java       /a2a/api/incidents REST API
-│           └── DemoController.java           /a2a/api/demo pre-built scenarios
-│
-└── docker-compose.yml               Orchestrates all three services
+└── incident-intelligence/           IT Incident Intelligence Platform
+    ├── pom.xml                      Parent POM (dependency management)
+    │
+    ├── incident-mcp-server/         MCP Server module
+    │   ├── pom.xml
+    │   ├── Dockerfile
+    │   └── src/main/java/dev/pekelund/mcp/
+    │       ├── IncidentMcpServerApplication.java
+    │       ├── config/McpServerConfig.java       Tool registration
+    │       ├── domain/                           JPA entities (owns full schema)
+    │       ├── repository/                       Spring Data repositories
+    │       └── tool/                             @Tool-annotated MCP tool implementations
+    │           ├── LogQueryTool.java
+    │           ├── MetricsQueryTool.java
+    │           ├── RunbookSearchTool.java
+    │           ├── IncidentHistoryTool.java
+    │           └── ServiceStatusTool.java
+    │
+    ├── incident-agent-app/          Agent Application module
+    │   ├── pom.xml
+    │   ├── Dockerfile
+    │   └── src/main/java/dev/pekelund/agent/
+    │       ├── IncidentAgentApplication.java
+    │       ├── config/
+    │       │   ├── AgentConfig.java              ChatClient + MCP wiring
+    │       │   └── A2AConfig.java                AgentCard + AgentExecutor beans (A2A)
+    │       ├── TriageAgent.java                  Severity/category classification
+    │       ├── DiagnosisAgent.java               Root-cause analysis
+    │       ├── IncidentOrchestrator.java         Pipeline coordinator
+    │       ├── domain/                           JPA entities (validates schema)
+    │       ├── dto/                              Request/Response records
+    │       ├── repository/                       Spring Data repositories
+    │       ├── service/IncidentService.java      Business logic
+    │       └── controller/
+    │           ├── IncidentController.java       /a2a/api/incidents REST API
+    │           └── DemoController.java           /a2a/api/demo pre-built scenarios
+    │
+    └── docker-compose.yml           Orchestrates all three services
 ```
 
 ---
@@ -225,7 +226,7 @@ pekelund-ai/
 ```bash
 # 1. Clone the repository
 git clone https://github.com/pekelund-dev/pekelund-ai.git
-cd pekelund-ai
+cd pekelund-ai/incident-intelligence
 
 # 2. Set your Gemini API key (free at https://ai.google.dev/)
 export GEMINI_API_KEY=AIza-your-key-here
@@ -366,17 +367,19 @@ Rather than using JSON mode or structured output APIs, the agents use a rigid
 
 ```bash
 # Start just PostgreSQL
+cd incident-intelligence
 docker compose up postgres -d
 
 # Run MCP server
-cd incident-mcp-server
+cd incident-intelligence/incident-mcp-server
 mvn spring-boot:run
 
 # Run agent app (in a new terminal)
-cd incident-agent-app
+cd incident-intelligence/incident-agent-app
 GEMINI_API_KEY=AIza-your-key mvn spring-boot:run
 
 # Run tests (no external services needed — uses H2 and mocks)
+cd incident-intelligence
 mvn test
 ```
 
@@ -401,7 +404,7 @@ This project demonstrates several advanced Spring AI, MCP and A2A concepts:
 | Concept | Where to look |
 |---------|---------------|
 | MCP Server setup | `McpServerConfig.java`, `application.yml` (mcp-server) |
-| `@Tool` annotation | All files in `incident-mcp-server/tool/` |
+| `@Tool` annotation | All files in `incident-intelligence/incident-mcp-server/tool/` |
 | MCP Client config | `application.yml` (agent-app), `AgentConfig.java` |
 | AI Agent with tool calls | `TriageAgent.java`, `DiagnosisAgent.java` |
 | Agent orchestration | `IncidentOrchestrator.java` |
