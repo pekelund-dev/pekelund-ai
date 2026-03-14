@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="sv" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${pageTitle} + ' | Börsens Vinnare'">Börsens Vinnare</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}"/>
+    <!-- htmx from WebJars -->
+    <script th:src="@{/webjars/htmx.org/dist/htmx.min.js}" defer></script>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-brand">
+        <span class="nav-logo">📊</span>
+        <a th:href="@{/}" class="nav-title">Börsens Vinnare</a>
+    </div>
+    <ul class="nav-links">
+        <li><a th:href="@{/}" th:classappend="${activePage == 'hem'} ? 'active'">Hem</a></li>
+        <li><a th:href="@{/historisk}" th:classappend="${activePage == 'historisk'} ? 'active'">Historisk analys</a></li>
+        <li><a th:href="@{/portfölj}" th:classappend="${activePage == 'portfölj'} ? 'active'">Min portfölj</a></li>
+        <li><a th:href="@{/strategi}" th:classappend="${activePage == 'strategi'} ? 'active'">Strategier</a></li>
+    </ul>
+</nav>
+
+<main th:insert="${content}">
+</main>
+
+<footer class="footer">
+    <p>Börsens Vinnare &mdash; Baserat på Arne Kavastu Talvings strategier</p>
+    <p class="footer-disclaimer">⚠️ Detta är ett simuleringsverktyg. Ingenting här utgör finansiell rådgivning.</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="sv" xmlns:th="http://www.thymeleaf.org">
+<!-- Fragment for portfolio list (htmx partial) -->
+<body>
+<div th:fragment="portföljlista">
+    <div th:if="${#lists.isEmpty(portfölj)}" class="empty-state">
+        <p>Inga aktier i portföljen. Lägg till aktier ovan.</p>
+    </div>
+
+    <table th:if="${not #lists.isEmpty(portfölj)}" class="portfölj-tabell">
+        <thead>
+            <tr>
+                <th>Symbol</th>
+                <th>Bolag</th>
+                <th>Antal</th>
+                <th>Köpkurs (SEK)</th>
+                <th>Totalt (SEK)</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="post, iter : ${portfölj}">
+                <td class="symbol-cell" th:text="${post.symbol()}">ABB.ST</td>
+                <td th:text="${post.displayName()}">ABB</td>
+                <td th:text="${#numbers.formatDecimal(post.shares(), 1, 'COMMA', 0, 'POINT')}">100</td>
+                <td th:text="${#numbers.formatDecimal(post.buyPrice(), 1, 'COMMA', 2, 'POINT')}">150,00</td>
+                <td th:text="${#numbers.formatDecimal(post.shares() * post.buyPrice(), 1, 'COMMA', 0, 'POINT')}">15 000</td>
+                <td>
+                    <button class="btn btn-danger btn-xs"
+                            th:attr="hx-delete=@{'/portfölj/' + ${iter.index}}"
+                            hx-target="#portfölj-lista"
+                            hx-swap="innerHTML"
+                            hx-confirm="Ta bort innehavet?">
+                        ✕
+                    </button>
+                </td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td colspan="4"><strong>Totalt investerat</strong></td>
+                <td th:with="total=${portfölj.stream().mapToDouble(p -> p.shares() * p.buyPrice()).sum()}"
+                    th:text="${#numbers.formatDecimal(total, 1, 'COMMA', 0, 'POINT') + ' SEK'}">0 SEK</td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+</body>
+</html>

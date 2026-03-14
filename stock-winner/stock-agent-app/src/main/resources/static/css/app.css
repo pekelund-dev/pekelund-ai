@@ -1,0 +1,396 @@
+/* =========================================================
+   Börsens Vinnare – Swedish Stock Winner AI System
+   Main stylesheet
+   ========================================================= */
+
+/* ── Variables ────────────────────────────────────────────── */
+:root {
+    --color-primary:   #1a6b3c;
+    --color-primary-d: #145530;
+    --color-accent:    #f0a500;
+    --color-success:   #28a745;
+    --color-danger:    #dc3545;
+    --color-warning:   #ffc107;
+    --color-bg:        #f4f6f9;
+    --color-surface:   #ffffff;
+    --color-border:    #dee2e6;
+    --color-text:      #212529;
+    --color-text-muted:#6c757d;
+    --radius:          8px;
+    --shadow:          0 2px 8px rgba(0,0,0,.08);
+    --shadow-lg:       0 4px 20px rgba(0,0,0,.12);
+    --transition:      .2s ease;
+}
+
+/* ── Reset / Base ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    background: var(--color-bg);
+    color: var(--color-text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+a { color: var(--color-primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Navbar ───────────────────────────────────────────────── */
+.navbar {
+    background: var(--color-primary);
+    color: #fff;
+    padding: .75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,.2);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.nav-brand { display: flex; align-items: center; gap: .5rem; }
+.nav-logo  { font-size: 1.5rem; }
+.nav-title { color: #fff; font-size: 1.2rem; font-weight: 700; }
+.nav-title:hover { text-decoration: none; opacity: .9; }
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    gap: .25rem;
+    margin-left: auto;
+}
+
+.nav-links a {
+    color: rgba(255,255,255,.85);
+    padding: .4rem .85rem;
+    border-radius: var(--radius);
+    transition: var(--transition);
+    font-weight: 500;
+}
+.nav-links a:hover,
+.nav-links a.active {
+    background: rgba(255,255,255,.15);
+    color: #fff;
+    text-decoration: none;
+}
+
+/* ── Layout ───────────────────────────────────────────────── */
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 3rem;
+    flex: 1;
+}
+
+main.container { flex: 1; }
+
+/* ── Cards ────────────────────────────────────────────────── */
+.card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+}
+
+.card h2 { margin-bottom: .75rem; font-size: 1.2rem; color: var(--color-primary); }
+.card h3 { margin: .75rem 0 .5rem; font-size: 1.05rem; }
+.card-desc { color: var(--color-text-muted); margin-bottom: 1rem; }
+.card-wide { grid-column: 1 / -1; }
+
+.card-link { cursor: pointer; transition: var(--transition); }
+.card-link:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+.card-icon { font-size: 2.5rem; margin-bottom: .5rem; }
+
+.info-card { text-align: center; color: var(--color-text-muted); }
+.info-icon { font-size: 2rem; margin-bottom: .5rem; }
+
+/* ── Dashboard grid ──────────────────────────────────────── */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+/* ── Hero ─────────────────────────────────────────────────── */
+.hero {
+    text-align: center;
+    padding: 2.5rem 1rem 2rem;
+}
+.hero h1 { font-size: 2.2rem; color: var(--color-primary); margin-bottom: .5rem; }
+.hero-subtitle { font-size: 1.1rem; color: var(--color-text-muted); }
+
+/* ── Page header ─────────────────────────────────────────── */
+.page-header {
+    margin-bottom: 1.5rem;
+}
+.page-header h1 { font-size: 1.8rem; color: var(--color-primary); margin-bottom: .4rem; }
+.page-header p { color: var(--color-text-muted); }
+
+/* ── Buttons ──────────────────────────────────────────────── */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .55rem 1.2rem;
+    border: none;
+    border-radius: var(--radius);
+    font-size: .9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    line-height: 1;
+}
+.btn:disabled { opacity: .6; cursor: not-allowed; }
+
+.btn-primary  { background: var(--color-primary);  color: #fff; }
+.btn-primary:hover  { background: var(--color-primary-d); }
+
+.btn-success  { background: var(--color-success);  color: #fff; }
+.btn-success:hover  { background: #218838; }
+
+.btn-danger   { background: var(--color-danger);   color: #fff; }
+.btn-danger:hover   { background: #c82333; }
+
+.btn-outline  { background: transparent; border: 2px solid var(--color-primary); color: var(--color-primary); }
+.btn-outline:hover  { background: var(--color-primary); color: #fff; }
+
+.btn-secondary { background: #6c757d; color: #fff; }
+.btn-secondary:hover { background: #5a6268; }
+
+.btn-sm  { padding: .35rem .8rem; font-size: .82rem; }
+.btn-xs  { padding: .2rem .5rem;  font-size: .76rem; }
+
+/* Chip buttons (quick-select) */
+.btn-chip {
+    background: var(--color-bg);
+    border: 1.5px solid var(--color-border);
+    color: var(--color-text);
+    padding: .3rem .75rem;
+    border-radius: 100px;
+    font-size: .82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.btn-chip:hover   { border-color: var(--color-primary); color: var(--color-primary); }
+.btn-chip.selected { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+
+/* ── Quick select ────────────────────────────────────────── */
+.quick-select { margin-bottom: 1rem; }
+.quick-select .label { font-size: .85rem; color: var(--color-text-muted); display: block; margin-bottom: .4rem; }
+.quick-buttons { display: flex; flex-wrap: wrap; gap: .4rem; }
+
+/* ── Forms ────────────────────────────────────────────────── */
+.analys-form { }
+
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+    align-items: flex-end;
+}
+
+.form-group { display: flex; flex-direction: column; gap: .3rem; flex: 1 1 200px; }
+.form-group-sm { flex: 0 0 130px; }
+
+.form-group label { font-size: .85rem; font-weight: 600; color: var(--color-text-muted); }
+
+.form-input {
+    padding: .55rem .85rem;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius);
+    font-size: .95rem;
+    transition: var(--transition);
+    width: 100%;
+}
+.form-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(26,107,60,.15);
+}
+.form-hint { font-size: .78rem; color: var(--color-text-muted); }
+
+.form-actions { display: flex; align-items: flex-end; padding-bottom: 0; }
+
+/* ── Spinner (htmx indicator) ─────────────────────────────── */
+.htmx-indicator { display: none; }
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator { display: block; }
+
+.spinner {
+    color: var(--color-text-muted);
+    font-style: italic;
+    padding: .75rem 0;
+    font-size: .9rem;
+}
+
+/* ── Result text ─────────────────────────────────────────── */
+.result-box { margin-top: .75rem; }
+.result-text {
+    background: #f8f9fa;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    white-space: pre-wrap;
+    font-family: "Courier New", Courier, monospace;
+    font-size: .88rem;
+    line-height: 1.7;
+    overflow-x: auto;
+    margin-top: .75rem;
+}
+
+.analys-resultat h3,
+.screening-resultat h3,
+.simulerings-resultat h3 {
+    margin: .75rem 0 .25rem;
+    color: var(--color-primary);
+}
+
+/* ── Portfolio table ─────────────────────────────────────── */
+.portfölj-tabell {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .9rem;
+    margin-top: .5rem;
+}
+.portfölj-tabell th,
+.portfölj-tabell td {
+    text-align: left;
+    padding: .6rem .75rem;
+    border-bottom: 1px solid var(--color-border);
+}
+.portfölj-tabell thead th {
+    background: #f0f4f0;
+    font-weight: 700;
+    color: var(--color-primary);
+}
+.portfölj-tabell tfoot td {
+    font-weight: 700;
+    background: #f8f9fa;
+}
+.portfölj-tabell tr:hover td { background: #f5f9f5; }
+.symbol-cell { font-family: monospace; font-weight: 700; color: var(--color-primary); }
+
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+/* ── Strategies page ─────────────────────────────────────── */
+.strategies-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.strategy-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    box-shadow: var(--shadow);
+}
+.strategy-header {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin-bottom: .75rem;
+}
+.strategy-nummer {
+    width: 28px; height: 28px;
+    background: var(--color-primary);
+    color: #fff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .82rem; font-weight: 700; flex-shrink: 0;
+}
+.strategy-ikon  { font-size: 1.4rem; }
+.strategy-titel { font-size: 1rem; font-weight: 700; color: var(--color-primary); }
+.strategy-beskrivning { font-size: .88rem; color: var(--color-text-muted); margin-bottom: .75rem; line-height: 1.65; }
+
+.strategy-punkter { padding-left: 1.3rem; font-size: .87rem; }
+.strategy-punkter li { margin-bottom: .3rem; }
+
+/* Stats banner */
+.stats-banner {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    margin-top: 1.25rem;
+    flex-wrap: wrap;
+}
+.stat { text-align: center; }
+.stat-val { display: block; font-size: 2rem; font-weight: 800; color: var(--color-primary); }
+.stat-label { font-size: .82rem; color: var(--color-text-muted); }
+
+/* Formula card */
+.formula-card {}
+.formula {
+    background: #1e2a1e;
+    color: #a0f0a0;
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius);
+    margin: .75rem 0;
+    overflow-x: auto;
+}
+.formula code { font-size: .9rem; }
+
+.formula-tabell { width: 100%; border-collapse: collapse; font-size: .88rem; margin-top: .5rem; }
+.formula-tabell .formula-rad {
+    display: grid;
+    grid-template-columns: 100px 1fr 1fr;
+    gap: .5rem;
+    padding: .5rem .75rem;
+    border-bottom: 1px solid var(--color-border);
+}
+.formula-tabell .formula-rad.header { font-weight: 700; background: #f0f4f0; }
+
+/* Badges */
+.badge {
+    display: inline-block;
+    padding: .2rem .55rem;
+    border-radius: 100px;
+    font-size: .8rem;
+    font-weight: 700;
+}
+.badge-green  { background: #d4edda; color: #155724; }
+.badge-yellow { background: #fff3cd; color: #856404; }
+.badge-red    { background: #f8d7da; color: #721c24; }
+
+/* About card */
+.about-card p { margin-bottom: .75rem; }
+.disclaimer { font-size: .85rem; color: var(--color-text-muted); font-style: italic; }
+
+/* ── Footer ───────────────────────────────────────────────── */
+.footer {
+    background: var(--color-primary);
+    color: rgba(255,255,255,.8);
+    text-align: center;
+    padding: 1rem;
+    font-size: .85rem;
+    margin-top: auto;
+}
+.footer p + p { margin-top: .25rem; }
+.footer-disclaimer { color: rgba(255,255,255,.6); font-size: .8rem; }
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .navbar { flex-wrap: wrap; gap: .5rem; }
+    .nav-links { width: 100%; justify-content: center; margin-left: 0; }
+    .form-row { flex-direction: column; }
+    .form-group, .form-group-sm { flex: 1 1 auto; }
+    .stats-banner { gap: 1rem; }
+    .stat-val { font-size: 1.5rem; }
+    .hero h1 { font-size: 1.6rem; }
+}
