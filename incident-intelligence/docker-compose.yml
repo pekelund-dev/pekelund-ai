@@ -1,0 +1,97 @@
+###############################################################################
+# IT Incident Intelligence Platform — Docker Compose
+#
+# Services:
+#   postgres       — PostgreSQL 16 database (shared by both Spring Boot apps)
+#   mcp-server     — Incident MCP Server (exposes operational tools via MCP/SSE)
+#   agent-app      — Incident Agent App  (AI agents + REST API)
+#
+# Quick start:
+#   export GEMINI_API_KEY=AIza...
+#   docker compose up --build
+#
+# API is available at http://localhost:8080
+# MCP server is available at http://localhost:8081
+###############################################################################
+
+services:
+
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: itii_postgres
+    environment:
+      POSTGRES_DB:       itii_db
+      POSTGRES_USER:     itii
+      POSTGRES_PASSWORD: itii_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U itii -d itii_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ── MCP Server ──────────────────────────────────────────────────────────────
+  # Runs the Spring AI MCP Server that exposes operational tools via HTTP/SSE.
+  # Flyway migrations run on startup, creating and seeding all tables.
+  # The agent-app connects to this service as an MCP client.
+  mcp-server:
+    build:
+      context: .
+      dockerfile: incident-mcp-server/Dockerfile
+    container_name: itii_mcp_server
+    environment:
+      DB_URL:      jdbc:postgresql://postgres:5432/itii_db
+      DB_USERNAME: itii
+      DB_PASSWORD: itii_secret
+      SPRING_PROFILES_ACTIVE: default
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # ── Agent App ───────────────────────────────────────────────────────────────
+  # Hosts the AI agents and REST API.
+  # Waits for the MCP server to be healthy before starting so:
+  #   1. The Flyway schema is fully applied
+  #   2. The MCP SSE endpoint is ready to accept client connections
+  agent-app:
+    build:
+      context: .
+      dockerfile: incident-agent-app/Dockerfile
+    container_name: itii_agent_app
+    environment:
+      DB_URL:         jdbc:postgresql://postgres:5432/itii_db
+      DB_USERNAME:    itii
+      DB_PASSWORD:    itii_secret
+      MCP_SERVER_URL: http://mcp-server:8081
+      # ⚠️  Set your Gemini API key here or via 'export GEMINI_API_KEY=...' before running
+      # Get your free key at https://ai.google.dev/
+      GEMINI_API_KEY: ${GEMINI_API_KEY:change-me}
+      SPRING_PROFILES_ACTIVE: default
+    ports:
+      - "8080:8080"
+    depends_on:
+      mcp-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/a2a/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 45s
+
+volumes:
+  postgres_data:
+    driver: local
