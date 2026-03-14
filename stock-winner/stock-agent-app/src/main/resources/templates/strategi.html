@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="sv" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Strategier | Börsens Vinnare</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}"/>
+    <script th:src="@{/webjars/htmx.org/dist/htmx.min.js}" defer></script>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-brand">
+        <span class="nav-logo">📊</span>
+        <a th:href="@{/}" class="nav-title">Börsens Vinnare</a>
+    </div>
+    <ul class="nav-links">
+        <li><a th:href="@{/}">Hem</a></li>
+        <li><a th:href="@{/historisk}">Historisk analys</a></li>
+        <li><a th:href="@{/portfölj}">Min portfölj</a></li>
+        <li><a th:href="@{/strategi}" class="active">Strategier</a></li>
+    </ul>
+</nav>
+
+<main class="container">
+
+    <section class="page-header">
+        <h1>📚 Kavastus Investeringsstrategier</h1>
+        <p>Arne "Kavastu" Talving har sedan 2014 systematiskt slagit Stockholmsbörsen med i genomsnitt
+           ~38% per år. Här är de 6 kärnprinciperna som används i detta system.</p>
+        <div class="stats-banner">
+            <div class="stat">
+                <span class="stat-val">~900%</span>
+                <span class="stat-label">Avkastning 2014–2021</span>
+            </div>
+            <div class="stat">
+                <span class="stat-val">~38%</span>
+                <span class="stat-label">Snitt per år</span>
+            </div>
+            <div class="stat">
+                <span class="stat-val">vs 12%</span>
+                <span class="stat-label">OMXSPI per år</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Strategy cards -->
+    <section class="strategies-grid">
+        <article th:each="strategi : ${strategier}" class="strategy-card">
+            <div class="strategy-header">
+                <span class="strategy-nummer" th:text="${strategi['nummer']}">1</span>
+                <span class="strategy-ikon" th:text="${strategi['ikon']}">📈</span>
+                <h2 class="strategy-titel" th:text="${strategi['titel']}">Momentum</h2>
+            </div>
+            <p class="strategy-beskrivning" th:text="${strategi['beskrivning']}">Beskrivning</p>
+            <ul class="strategy-punkter">
+                <li th:each="punkt : ${strategi['punkter']}" th:text="${punkt}">Punkt</li>
+            </ul>
+        </article>
+    </section>
+
+    <!-- Momentum formula explanation -->
+    <section class="card formula-card">
+        <h2>🧮 Kavastus Momentumformel</h2>
+        <p>Systemet beräknar ett viktat momentumvärde baserat på tre tidshorisonter:</p>
+        <div class="formula">
+            <code>Momentumpoäng = (3 × Avkastning₃ₘₐₙ + 2 × Avkastning₆ₘₐₙ + 1 × Avkastning₁₂ₘₐₙ) / 6</code>
+        </div>
+        <div class="formula-tabell">
+            <div class="formula-rad header">
+                <span>Momentumpoäng</span>
+                <span>Bedömning</span>
+                <span>Åtgärd (Kavastu)</span>
+            </div>
+            <div class="formula-rad">
+                <span class="badge badge-green">&ge; 25%</span>
+                <span>⭐⭐⭐⭐⭐ Utmärkt</span>
+                <span>Stark köpkandidat – maxvikta</span>
+            </div>
+            <div class="formula-rad">
+                <span class="badge badge-green">&ge; 15%</span>
+                <span>⭐⭐⭐⭐ Starkt momentum</span>
+                <span>Köp och bevaka</span>
+            </div>
+            <div class="formula-rad">
+                <span class="badge badge-yellow">&ge; 5%</span>
+                <span>⭐⭐⭐ Måttligt momentum</span>
+                <span>Bevaka – avvakta förstärkning</span>
+            </div>
+            <div class="formula-rad">
+                <span class="badge badge-yellow">&ge; 0%</span>
+                <span>⭐⭐ Svagt momentum</span>
+                <span>Avvakta – undvik nyköp</span>
+            </div>
+            <div class="formula-rad">
+                <span class="badge badge-red">&lt; 0%</span>
+                <span>⭐ Negativt momentum</span>
+                <span>Sälj – flytta kapitalet</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Kavastu -->
+    <section class="card about-card">
+        <h2>👤 Om Arne "Kavastu" Talving</h2>
+        <p>Arne Talving är en privatinvesterare känd under pseudonymen "Kavastu" som under många år
+           systematiskt slagit Stockholmsbörsen. Hans strategi bygger på disciplinerad trendföljning,
+           momentuminvestering och strikt riskhantering &mdash; utan att förlita sig på fundamentalanalys
+           eller makrospådom.</p>
+        <p>Han har medverkat i finansmedia, håller kurser och har medförfattat boken
+           <em>"Hitta Börsens Vinnare"</em> (tillsammans med Erik Hansén och Jens Lennen).</p>
+        <p class="disclaimer">
+            ⚠️ Detta system är ett studieverktyg baserat på offentligt tillgänglig information om
+            Kavastus strategier. Det utgör inte finansiell rådgivning.
+        </p>
+    </section>
+
+</main>
+
+<footer class="footer">
+    <p>Börsens Vinnare &mdash; Baserat på Arne Kavastu Talvings strategier</p>
+    <p class="footer-disclaimer">⚠️ Detta är ett simuleringsverktyg. Ingenting här utgör finansiell rådgivning.</p>
+</footer>
+
+</body>
+</html>

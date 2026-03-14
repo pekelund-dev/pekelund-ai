@@ -1,0 +1,20 @@
+# Build artifacts
+target/
+*.jar
+*.war
+*.ear
+
+# IDE files
+.idea/
+*.iml
+.settings/
+.classpath
+.project
+*.DS_Store
+
+# Environment files with secrets (use .env.example as template)
+.env
+
+# Logs
+*.log
+logs/

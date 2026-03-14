@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="sv" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Historisk analys | Börsens Vinnare</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}"/>
+    <script th:src="@{/webjars/htmx.org/dist/htmx.min.js}" defer></script>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-brand">
+        <span class="nav-logo">📊</span>
+        <a th:href="@{/}" class="nav-title">Börsens Vinnare</a>
+    </div>
+    <ul class="nav-links">
+        <li><a th:href="@{/}">Hem</a></li>
+        <li><a th:href="@{/historisk}" class="active">Historisk analys</a></li>
+        <li><a th:href="@{/portfölj}">Min portfölj</a></li>
+        <li><a th:href="@{/strategi}">Strategier</a></li>
+    </ul>
+</nav>
+
+<main class="container">
+
+    <section class="page-header">
+        <h1>📈 Historisk analys</h1>
+        <p>Analysera en aktie med Kavastus momentummetod. Systemet beräknar viktat momentum (3/6/12 månader),
+           jämför med OMXSPI och ger en tydlig rekommendation.</p>
+    </section>
+
+    <!-- Market status auto-load -->
+    <section class="card">
+        <h2>🌡️ Marknadsläge (OMXSPI)</h2>
+        <div id="marknads-box"
+             hx-post="@{/historisk/marknad}"
+             hx-trigger="load"
+             hx-swap="innerHTML"
+             hx-indicator="#marknad-ind">
+            <div id="marknad-ind" class="spinner htmx-indicator">Hämtar marknadsdata…</div>
+        </div>
+        <button class="btn btn-outline btn-sm"
+                hx-post="@{/historisk/marknad}"
+                hx-target="#marknads-box"
+                hx-swap="innerHTML"
+                hx-indicator="#marknad-ind">
+            🔄 Uppdatera
+        </button>
+    </section>
+
+    <!-- Single stock analysis -->
+    <section class="card">
+        <h2>🔍 Analysera en aktie</h2>
+
+        <form hx-post="@{/historisk/analysera}"
+              hx-target="#analysresultat"
+              hx-swap="innerHTML"
+              hx-indicator="#analys-spinner"
+              class="analys-form">
+
+            <!-- Quick-select buttons for popular stocks -->
+            <div class="quick-select">
+                <span class="label">Snabbval:</span>
+                <div class="quick-buttons">
+                    <button th:each="aktie : ${aktier}"
+                            type="button"
+                            class="btn btn-chip"
+                            th:attr="onclick='setSymbol(this)'"
+                            th:data-symbol="${aktie['symbol']}"
+                            th:text="${aktie['name']}">Aktie</button>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="symbol">Ticker-symbol</label>
+                    <input id="symbol" name="symbol" type="text" class="form-input"
+                           placeholder="t.ex. ABB.ST, ERIC-B.ST, ^OMXSPI"
+                           required/>
+                    <span class="form-hint">Lägg till .ST för Stockholmsbörsen</span>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        📊 Analysera
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <div id="analys-spinner" class="spinner htmx-indicator">
+            Analyserar med Kavastu-strategin… (detta kan ta en stund)
+        </div>
+        <div id="analysresultat"></div>
+    </section>
+
+    <!-- Full market screening -->
+    <section class="card">
+        <h2>🏆 Hitta börsens vinnare</h2>
+        <p>Screena de viktigaste svenska aktierna och rangordna dem efter Kavastus momentumstrategi.</p>
+
+        <button class="btn btn-success"
+                hx-post="@{/historisk/screena}"
+                hx-target="#screening-resultat"
+                hx-swap="innerHTML"
+                hx-indicator="#screena-ind">
+            🚀 Kör fullständig screening
+        </button>
+        <div id="screena-ind" class="spinner htmx-indicator">
+            Screnar alla aktier… (tar 1-2 minuter)
+        </div>
+        <div id="screening-resultat"></div>
+    </section>
+
+</main>
+
+<footer class="footer">
+    <p>Börsens Vinnare &mdash; Baserat på Arne Kavastu Talvings strategier</p>
+    <p class="footer-disclaimer">⚠️ Detta är ett simuleringsverktyg. Ingenting här utgör finansiell rådgivning.</p>
+</footer>
+
+<script>
+function setSymbol(btn) {
+    document.getElementById('symbol').value = btn.getAttribute('data-symbol');
+    document.querySelectorAll('.btn-chip').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+}
+</script>
+
+</body>
+</html>

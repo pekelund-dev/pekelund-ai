@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html lang="sv" xmlns:th="http://www.thymeleaf.org">
+<!-- Fragment for single-stock analysis result (htmx partial) -->
+<body>
+<div class="analys-resultat" th:fragment="analysresultat">
+    <h3 th:text="'Analys: ' + ${symbol}">Analys</h3>
+    <div class="result-text" th:text="${analys}">Resultat</div>
+</div>
+</body>
+</html>

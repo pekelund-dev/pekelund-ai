@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="sv" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Hem | Börsens Vinnare</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}"/>
+    <script th:src="@{/webjars/htmx.org/dist/htmx.min.js}" defer></script>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-brand">
+        <span class="nav-logo">📊</span>
+        <a th:href="@{/}" class="nav-title">Börsens Vinnare</a>
+    </div>
+    <ul class="nav-links">
+        <li><a th:href="@{/}" class="active">Hem</a></li>
+        <li><a th:href="@{/historisk}">Historisk analys</a></li>
+        <li><a th:href="@{/portfölj}">Min portfölj</a></li>
+        <li><a th:href="@{/strategi}">Strategier</a></li>
+    </ul>
+</nav>
+
+<main class="container">
+
+    <section class="hero">
+        <h1>📊 Börsens Vinnare</h1>
+        <p class="hero-subtitle">AI-baserat system för att hitta börsens vinnare med Arne Kavastu Talvings strategier</p>
+    </section>
+
+    <!-- Market status card with htmx auto-load -->
+    <section class="dashboard-grid">
+
+        <div class="card card-wide">
+            <h2>🌡️ Marknadsläge just nu</h2>
+            <p class="card-desc">Hämtar aktuell analys av Stockholmsbörsen (OMXSPI)…</p>
+            <div id="marknadsresultat"
+                 hx-post="@{/historisk/marknad}"
+                 hx-trigger="load"
+                 hx-swap="innerHTML"
+                 hx-indicator="#marknad-spinner">
+                <div id="marknad-spinner" class="spinner htmx-indicator">Analyserar marknaden…</div>
+            </div>
+        </div>
+
+        <div class="card card-link" th:onclick="|location.href='@{/historisk}'|">
+            <div class="card-icon">📈</div>
+            <h3>Historisk analys</h3>
+            <p>Analysera en specifik aktie med Kavastus momentummetod och jämför med OMXSPI.</p>
+            <a th:href="@{/historisk}" class="btn btn-primary">Öppna</a>
+        </div>
+
+        <div class="card card-link" th:onclick="|location.href='@{/portfölj}'|">
+            <div class="card-icon">💼</div>
+            <h3>Min portfölj</h3>
+            <p th:text="'Du har ' + ${portföljStorlek} + ' aktier i din portfölj. Simulera med Kavastus strategi.'">
+                Du har 0 aktier i din portfölj.
+            </p>
+            <a th:href="@{/portfölj}" class="btn btn-primary">Öppna</a>
+        </div>
+
+        <div class="card card-link" th:onclick="|location.href='@{/strategi}'|">
+            <div class="card-icon">📚</div>
+            <h3>Kavastus strategier</h3>
+            <p>Lär dig om de 6 kärnprinciperna som Kavastu använder för att hitta börsens vinnare.</p>
+            <a th:href="@{/strategi}" class="btn btn-secondary">Läs mer</a>
+        </div>
+
+    </section>
+
+    <!-- Quick stock screener -->
+    <section class="card">
+        <h2>🔍 Snabbscreening &mdash; Hitta vinnarna nu</h2>
+        <p>Screena de viktigaste svenska aktierna och hitta de med starkast Kavastu-momentum.</p>
+        <button class="btn btn-success"
+                hx-post="@{/historisk/screena}"
+                hx-target="#screeningresultat"
+                hx-swap="innerHTML"
+                hx-indicator="#screena-spinner">
+            🚀 Kör screening
+        </button>
+        <div id="screena-spinner" class="spinner htmx-indicator">Screnar marknaden…</div>
+        <div id="screeningresultat" class="result-box"></div>
+    </section>
+
+</main>
+
+<footer class="footer">
+    <p>Börsens Vinnare &mdash; Baserat på Arne Kavastu Talvings strategier</p>
+    <p class="footer-disclaimer">⚠️ Detta är ett simuleringsverktyg. Ingenting här utgör finansiell rådgivning.</p>
+</footer>
+
+</body>
+</html>
