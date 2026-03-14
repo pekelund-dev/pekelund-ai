@@ -16,7 +16,7 @@ spring:
         sse:
           connections:
             stock-mcp-server:
-              url: http://localhost:8083
+              url: ${STOCK_MCP_SERVER_URL:http://localhost:8083}
     a2a:
       server:
         enabled: true

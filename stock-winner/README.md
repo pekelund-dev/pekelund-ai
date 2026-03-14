@@ -38,8 +38,37 @@ Arne Kavastu Talvings nyckelprinciper implementerade i systemet:
 - **Spring AI 2.0.0-M2** med MCP och A2A stöd
 - **Google Gemini 2.0 Flash** som LLM
 - **Yahoo Finance API** för marknadsdata
+- **Thymeleaf + htmx** för webbgränssnittet
+- **Docker / Docker Compose** för containerisering
+
+## Webbgränssnitt
+
+Webgränssnittet är tillgängligt på `http://localhost:8082/a2a/` och innehåller fyra sektioner:
+
+- **Hem** — Marknadsläge (OMXSPI) i realtid + snabbscreening
+- **Historisk analys** — Analysera valfri aktie med Kavastus momentummetod
+- **Min portfölj** — Lägg till innehav och simulera med AI-analys
+- **Strategier** — Kavastus 6 kärnprinciper med formel och bedömningstabell
 
 ## Kom Igång
+
+### Med Docker (rekommenderat)
+
+```bash
+cd stock-winner
+
+# 1. Skapa .env-fil med din Gemini API-nyckel
+cp .env.example .env
+# Redigera .env och sätt GEMINI_API_KEY=din-api-nyckel
+
+# 2. Bygg och starta alla tjänster
+docker compose up --build
+
+# Webgränssnittet: http://localhost:8082/a2a/
+# MCP-server:      http://localhost:8083
+```
+
+### Utan Docker (manuell start)
 
 ### Förutsättningar
 - Java 21+ (Spring Boot 4 kräver Java 21)

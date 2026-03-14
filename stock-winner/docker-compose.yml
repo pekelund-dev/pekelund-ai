@@ -1,0 +1,60 @@
+# Börsens Vinnare – Docker Compose
+#
+# Starts both services with a shared internal network so that
+# stock-agent-app can reach stock-mcp-server by its service name.
+#
+# Quick start:
+#   cp .env.example .env          # then fill in GEMINI_API_KEY
+#   docker compose up --build
+#
+# stock-mcp-server : http://localhost:8083  (MCP tools / Yahoo Finance)
+# stock-agent-app  : http://localhost:8082/a2a/  (Web UI + A2A endpoint)
+
+services:
+
+  stock-mcp-server:
+    build:
+      context: .
+      dockerfile: stock-mcp-server/Dockerfile
+    image: stock-mcp-server:latest
+    container_name: stock-mcp-server
+    ports:
+      - "8083:8083"
+    networks:
+      - stock-net
+    restart: unless-stopped
+    healthcheck:
+      # Uses bash's built-in /dev/tcp pseudo-device (no wget/curl needed).
+      # NOTE: This requires bash to be present in the runtime image.
+      # eclipse-temurin:21-jre is Ubuntu-based and includes bash — if you
+      # switch to a distroless or Alpine image, replace this check with
+      # an HTTP probe using a separately installed tool (e.g. curl).
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8083' 2>/dev/null && echo OK || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 40s
+
+  stock-agent-app:
+    build:
+      context: .
+      dockerfile: stock-agent-app/Dockerfile
+    image: stock-agent-app:latest
+    container_name: stock-agent-app
+    ports:
+      - "8082:8082"
+    networks:
+      - stock-net
+    environment:
+      # Required: Your Google Gemini API key
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      # Points the agent at the MCP server container (overrides localhost default)
+      STOCK_MCP_SERVER_URL: http://stock-mcp-server:8083
+    depends_on:
+      stock-mcp-server:
+        condition: service_healthy
+    restart: unless-stopped
+
+networks:
+  stock-net:
+    driver: bridge
