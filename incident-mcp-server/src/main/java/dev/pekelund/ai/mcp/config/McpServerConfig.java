@@ -1,5 +1,7 @@
 package dev.pekelund.ai.mcp.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import dev.pekelund.ai.mcp.tool.IncidentHistoryTool;
 import dev.pekelund.ai.mcp.tool.LogQueryTool;
 import dev.pekelund.ai.mcp.tool.MetricsQueryTool;
@@ -27,9 +29,32 @@ import org.springframework.context.annotation.Configuration;
  *   <li>The MCP Server starter discovers all {@link ToolCallbackProvider} beans and
  *       registers the callbacks as MCP tools, exposed via HTTP/SSE transport.</li>
  * </ol>
+ *
+ * <h2>Jackson 2.x ObjectMapper Bean</h2>
+ * <p>Spring Boot 4.x auto-configures a Jackson 3.x {@code ObjectMapper}
+ * ({@code tools.jackson.databind.ObjectMapper}). Our tool implementations use
+ * Jackson 2.x ({@code com.fasterxml.jackson.databind.ObjectMapper}) which is
+ * provided by the Spring AI MCP SDK. We register an explicit
+ * {@code com.fasterxml.jackson.databind.ObjectMapper} bean here so the tools
+ * can inject it without relying on Spring Boot's auto-configuration.
  */
 @Configuration
 public class McpServerConfig {
+
+    /**
+     * Explicit Jackson 2.x {@code ObjectMapper} bean used by all MCP tool implementations.
+     *
+     * <p>Spring Boot 4.x moved to Jackson 3.x ({@code tools.jackson.*} namespace).
+     * The Spring AI MCP SDK still uses Jackson 2.x ({@code com.fasterxml.jackson.*}),
+     * so we register this explicit bean to satisfy the tools' constructor injection.
+     * There is no conflict with Spring Boot's auto-configured Jackson 3.x ObjectMapper
+     * because the two classes are in different namespaces and packages.
+     */
+    @Bean
+    public ObjectMapper jackson2ObjectMapper() {
+        return new ObjectMapper()
+                .registerModule(new JavaTimeModule());
+    }
 
     /**
      * Registers all operational tool implementations with the MCP server.

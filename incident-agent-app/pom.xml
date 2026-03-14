@@ -63,6 +63,17 @@
             <artifactId>spring-ai-starter-mcp-client</artifactId>
         </dependency>
 
+        <!--
+            Spring AI Community A2A Server autoconfigure.
+            Provides A2A protocol support: AgentCardController (/.well-known/agent-card.json),
+            MessageController (POST /), TaskController (/tasks/{id}).
+            Requires AgentCard + AgentExecutor beans — provided in A2AConfig.
+        -->
+        <dependency>
+            <groupId>org.springaicommunity</groupId>
+            <artifactId>spring-ai-a2a-server-autoconfigure</artifactId>
+        </dependency>
+
         <!-- ==================== Database ==================== -->
         <dependency>
             <groupId>org.postgresql</groupId>

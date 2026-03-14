@@ -1,5 +1,22 @@
 server:
   port: 8080
+  # ─── A2A Context Path ────────────────────────────────────────────────────────
+  # All application endpoints live under /a2a so the A2A MessageController can
+  # register at POST / (relative) = POST /a2a (absolute) without conflicting
+  # with Spring Boot's built-in error endpoints.
+  #
+  # A2A endpoints (from spring-ai-a2a-server-autoconfigure):
+  #   GET  /a2a/.well-known/agent-card.json  → agent card discovery
+  #   GET  /a2a/card                         → alternative agent card endpoint
+  #   POST /a2a                              → JSON-RPC message send
+  #   GET  /a2a/tasks/{id}                   → task status retrieval
+  #   POST /a2a/tasks/{id}/cancel            → task cancellation
+  #
+  # REST API endpoints (unchanged, just prefixed):
+  #   /a2a/api/incidents, /a2a/api/demo, /a2a/actuator/health …
+  # ─────────────────────────────────────────────────────────────────────────────
+  servlet:
+    context-path: /a2a
 
 spring:
   application:
@@ -49,6 +66,14 @@ spring:
           options:
             model: gemini-2.0-flash      # Fast, cost-effective; upgrade to gemini-1.5-pro for deeper reasoning
             temperature: 0.2             # Low temperature = more deterministic/factual responses
+
+    # ─── Spring AI A2A Server ────────────────────────────────────────────────
+    # Enabled by default when AgentCard + AgentExecutor beans are present.
+    # See A2AConfig.java for bean definitions.
+    # ────────────────────────────────────────────────────────────────────────
+    a2a:
+      server:
+        enabled: true
 
     # ─── Spring AI MCP Client ───────────────────────────────────────────────
     # Connects to the incident-mcp-server (running in Docker as "mcp-server").

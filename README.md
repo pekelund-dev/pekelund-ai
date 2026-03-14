@@ -1,7 +1,7 @@
 # IT Incident Intelligence Platform (ITII)
 
-An AI-powered incident response system built with **Java 17**, **Spring Boot 3.3**,
-**Spring AI 1.1.0**, the **Model Context Protocol (MCP)** and the **Agent-to-Agent (A2A) Protocol**.
+An AI-powered incident response system built with **Java 17**, **Spring Boot 4.0**,
+**Spring AI 2.0.0-M2**, the **Model Context Protocol (MCP)** and the **Agent-to-Agent (A2A) Protocol**.
 
 > **Best practices** — note the spelling! (not "practises" for the noun form in software engineering context)
 
@@ -97,19 +97,28 @@ A2A is an open standard (by Google, 2025) that defines how AI agents discover an
 **each other** — regardless of vendor, framework or programming language. Think of it as the
 **HTTP for agent interoperability**:
 
-- Every A2A agent publishes an **Agent Card** at `GET /.well-known/agent.json` describing
+- Every A2A agent publishes an **Agent Card** at `GET /.well-known/agent-card.json` describing
   its skills, input/output formats and task endpoint
-- Clients POST **JSON-RPC 2.0** messages to the agent's task endpoint (`/a2a`)
+- Clients POST JSON messages to the agent's task endpoint (`POST /a2a`)
 - The agent executes the task and returns a structured **Task** response with status and
   content parts
 - Agents can call **other agents** as sub-tasks, enabling true multi-agent collaboration
 
+**ITII uses [`spring-ai-a2a-server-autoconfigure`](https://github.com/spring-ai-community/spring-ai-a2a) (Spring AI 2.0.0-M2)**,
+which auto-configures all A2A endpoints from two user-provided beans: `AgentCard` and `AgentExecutor`.
+
 #### ITII A2A Endpoints
+
+All A2A and REST endpoints are under the `/a2a` servlet context-path (required so the A2A
+`MessageController` at `POST /` doesn't conflict with Spring Boot's default routes).
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/.well-known/agent.json` | `GET` | Agent card — lists skills and task URL |
-| `/a2a` | `POST` | JSON-RPC task handler |
+| `/a2a/.well-known/agent-card.json` | `GET` | Agent card — lists skills and task URL (primary discovery) |
+| `/a2a/card` | `GET` | Alternative agent card endpoint |
+| `/a2a` | `POST` | JSON message send (A2A `sendMessage`) |
+| `/a2a/tasks/{id}` | `GET` | Task status retrieval |
+| `/a2a/tasks/{id}/cancel` | `POST` | Cancel a running task |
 
 #### A2A Skills
 
@@ -118,33 +127,39 @@ A2A is an open standard (by Google, 2025) that defines how AI agents discover an
 | `incident_analysis` | Full pipeline: triage + root-cause diagnosis + summary (default) |
 | `incident_triage`   | Fast triage only — severity, category, affected services |
 
+Pass `"skillId": "incident_triage"` in the request `metadata` map to select a skill.
+
 #### Example A2A Request
 
 ```bash
-# Discover the agent
-curl http://localhost:8080/.well-known/agent.json
+# Discover the agent card
+curl http://localhost:8080/a2a/.well-known/agent-card.json
 
-# Submit a task (full analysis)
+# Submit a task (full analysis — default skill)
 curl -X POST http://localhost:8080/a2a \
   -H "Content-Type: application/json" \
   -d '{
-    "jsonrpc": "2.0",
     "id": "req-1",
-    "method": "tasks/send",
-    "params": {
-      "id": "task-abc123",
-      "skillId": "incident_analysis",
-      "message": {
-        "role": "user",
-        "parts": [{"type": "text/plain", "text": "title: Payment 503\ndescription: Error rate at 80% since 5 minutes ago"}]
-      }
+    "message": {
+      "role": "user",
+      "parts": [{"type": "text", "text": "title: Payment 503\ndescription: Error rate at 80% since 5 minutes ago"}]
     }
   }'
 
-# Retrieve the completed task
+# Submit a fast triage task (pass skillId in metadata)
 curl -X POST http://localhost:8080/a2a \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":"req-2","method":"tasks/get","params":{"id":"task-abc123"}}'
+  -d '{
+    "id": "req-2",
+    "metadata": {"skillId": "incident_triage"},
+    "message": {
+      "role": "user",
+      "parts": [{"type": "text", "text": "title: API gateway 503\ndescription: All endpoints down since 15 minutes ago"}]
+    }
+  }'
+
+# Get task status
+curl http://localhost:8080/a2a/tasks/{taskId}
 ```
 
 ---
@@ -174,21 +189,19 @@ pekelund-ai/
 │   ├── Dockerfile
 │   └── src/main/java/dev/pekelund/ai/agent/
 │       ├── IncidentAgentApplication.java
-│       ├── config/AgentConfig.java           ChatClient + MCP wiring
+│       ├── config/
+│       │   ├── AgentConfig.java              ChatClient + MCP wiring
+│       │   └── A2AConfig.java                AgentCard + AgentExecutor beans (A2A)
 │       ├── TriageAgent.java                  Severity/category classification
 │       ├── DiagnosisAgent.java               Root-cause analysis
 │       ├── IncidentOrchestrator.java         Pipeline coordinator
-│       ├── a2a/                              A2A Protocol implementation
-│       │   ├── A2AController.java            Agent card + JSON-RPC endpoint
-│       │   ├── A2ATaskService.java           Task routing to agents
-│       │   └── ...                           A2A DTOs (Task, Message, AgentCard…)
 │       ├── domain/                           JPA entities (validates schema)
 │       ├── dto/                              Request/Response records
 │       ├── repository/                       Spring Data repositories
 │       ├── service/IncidentService.java      Business logic
 │       └── controller/
-│           ├── IncidentController.java       /api/incidents REST API
-│           └── DemoController.java           /api/demo pre-built scenarios
+│           ├── IncidentController.java       /a2a/api/incidents REST API
+│           └── DemoController.java           /a2a/api/demo pre-built scenarios
 │
 └── docker-compose.yml               Orchestrates all three services
 ```
@@ -226,39 +239,42 @@ docker compose up --build
 #   ✓ Agent app started, connected to MCP server
 
 # 4. Run a demo scenario (in a new terminal)
-curl -X POST "http://localhost:8080/api/demo/simulate?scenario=payment-db"
+curl -X POST "http://localhost:8080/a2a/api/demo/simulate?scenario=payment-db"
 ```
 
 ---
 
 ## API Reference
 
-All endpoints are on `http://localhost:8080`.
+All endpoints are on `http://localhost:8080`. All paths are under the `/a2a` servlet context-path.
 
 ### Incidents
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `POST` | `/api/incidents` | Report a new incident |
-| `GET` | `/api/incidents` | List all incidents |
-| `GET` | `/api/incidents/{id}` | Get incident + notes |
-| `PUT` | `/api/incidents/{id}/status` | Update status |
-| `POST` | `/api/incidents/{id}/notes` | Add manual note |
-| `POST` | `/api/incidents/{id}/analyse` | **Trigger AI analysis** |
+| `POST` | `/a2a/api/incidents` | Report a new incident |
+| `GET` | `/a2a/api/incidents` | List all incidents |
+| `GET` | `/a2a/api/incidents/{id}` | Get incident + notes |
+| `PUT` | `/a2a/api/incidents/{id}/status` | Update status |
+| `POST` | `/a2a/api/incidents/{id}/notes` | Add manual note |
+| `POST` | `/a2a/api/incidents/{id}/analyse` | **Trigger AI analysis** |
 
 ### A2A Protocol
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/.well-known/agent.json` | Agent card (A2A discovery) |
-| `POST` | `/a2a` | JSON-RPC 2.0 task operations (`tasks/send`, `tasks/get`, `tasks/cancel`) |
+| `GET` | `/a2a/.well-known/agent-card.json` | Agent card — primary A2A discovery endpoint |
+| `GET` | `/a2a/card` | Agent card — alternative endpoint |
+| `POST` | `/a2a` | A2A message send (`sendMessage`) |
+| `GET` | `/a2a/tasks/{id}` | Task status retrieval |
+| `POST` | `/a2a/tasks/{id}/cancel` | Cancel a running task |
 
 ### Demo
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `POST` | `/api/demo/simulate?scenario=payment-db` | Run pre-built scenario |
-| `POST` | `/api/demo/scenarios` | List available scenarios |
+| `POST` | `/a2a/api/demo/simulate?scenario=payment-db` | Run pre-built scenario |
+| `POST` | `/a2a/api/demo/scenarios` | List available scenarios |
 
 ### Available Demo Scenarios
 
@@ -275,20 +291,20 @@ All endpoints are on `http://localhost:8080`.
 ### 1. Report a new incident
 
 ```bash
-curl -X POST http://localhost:8080/api/incidents \
+curl -X POST http://localhost:8080/a2a/api/incidents \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Payment service returning 503 errors",
     "description": "Users are unable to complete checkout. Error rate at 80%. Started 5 minutes ago.",
     "reportedBy": "on-call-engineer"
   }'
-# Response: {"id": 4, "status": "OPEN", "message": "Call POST /api/incidents/4/analyse ..."}
+# Response: {"id": 4, "status": "OPEN", "message": "Call POST /a2a/api/incidents/4/analyse ..."}
 ```
 
 ### 2. Trigger AI analysis
 
 ```bash
-curl -X POST http://localhost:8080/api/incidents/4/analyse
+curl -X POST http://localhost:8080/a2a/api/incidents/4/analyse
 # Runs triage + diagnosis + summary (30–120 seconds)
 # Returns: severity, category, root cause, recommendations, runbook reference
 ```
@@ -296,7 +312,7 @@ curl -X POST http://localhost:8080/api/incidents/4/analyse
 ### 3. Get full incident report
 
 ```bash
-curl http://localhost:8080/api/incidents/4
+curl http://localhost:8080/a2a/api/incidents/4
 # Returns incident details + all AI-generated timeline notes
 ```
 
@@ -312,7 +328,18 @@ service:
 - The same tool server could serve multiple agent applications
 - Tool implementations are isolated from AI logic
 
-### Why `gemini-2.0-flash`?
+### Why `spring-ai-a2a-server-autoconfigure` instead of a custom implementation?
+
+Spring AI 2.0.0-M2 is the first Spring AI version with production-grade A2A support
+via the community library [`spring-ai-a2a`](https://github.com/spring-ai-community/spring-ai-a2a).
+By using it, all A2A protocol complexity (JSON-RPC serialisation, task store, queue
+management, push notification hooks) is handled by the framework. You only provide:
+1. An `AgentCard` bean describing your agent's skills
+2. An `AgentExecutor` bean that processes incoming tasks
+
+This is the same "framework over boilerplate" philosophy as Spring MVC vs. raw Servlets.
+
+
 
 Google's Gemini 2.0 Flash offers excellent reasoning at low cost and has a generous free
 tier via the [Gemini Developer API](https://ai.google.dev/). For deeper analysis, switch
@@ -381,7 +408,7 @@ This project demonstrates several advanced Spring AI, MCP and A2A concepts:
 | System prompts | System prompt constants in each agent class |
 | Structured output parsing | `IncidentOrchestrator.parseField()` |
 | Spring AI ChatClient | `AgentConfig.java` |
-| **A2A Agent Card** | `A2AController.agentCard()` |
-| **A2A Task handling** | `A2AController.handleTask()`, `A2ATaskService` |
-| **A2A Protocol DTOs** | `dev.pekelund.ai.agent.a2a` package |
+| **A2A Agent Card** | `A2AConfig.agentCard()` — `io.a2a.spec.AgentCard` |
+| **A2A Agent Executor** | `A2AConfig.agentExecutor()` — `DefaultAgentExecutor` |
+| **A2A framework library** | `spring-ai-a2a-server-autoconfigure:0.2.0` |
 | **Gemini integration** | `application.yml` (`spring.ai.google.genai`) |

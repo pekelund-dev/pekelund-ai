@@ -86,7 +86,7 @@ services:
       mcp-server:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/a2a/actuator/health || exit 1"]
       interval: 10s
       timeout: 10s
       retries: 10
