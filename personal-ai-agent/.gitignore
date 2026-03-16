@@ -1,0 +1,8 @@
+target/
+*.class
+tokens/
+credentials.json
+notes.json
+.idea/
+*.iml
+.DS_Store
