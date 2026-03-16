@@ -9,7 +9,6 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.model.ChatResponse;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -34,6 +33,5 @@ class PersonalAiAgentApplicationTests {
     @Test
     void contextLoads() {
         // Verifies the Spring context starts successfully with all beans wired correctly
-        assertThat(true).isTrue();
     }
 }
