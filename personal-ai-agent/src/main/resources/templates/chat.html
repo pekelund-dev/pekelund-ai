@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal AI Agent</title>
+    <link rel="stylesheet" th:href="@{/css/chat.css}">
+    <!-- HTMX for dynamic partial-page updates without full reloads -->
+    <script src="https://unpkg.com/htmx.org@2.0.4" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<header class="app-header">
+    <div class="header-content">
+        <span class="header-logo">🤖</span>
+        <div class="header-text">
+            <h1>Personal AI Agent</h1>
+            <p>Powered by Gemini · Gmail · Calendar · Weather · Notes</p>
+        </div>
+    </div>
+</header>
+
+<main class="chat-main">
+    <div id="messages"
+         class="messages"
+         hx-on:htmx:after-swap="this.scrollTop = this.scrollHeight">
+
+        <!-- Welcome card shown before first message -->
+        <div class="welcome-card">
+            <h2>Hello! 👋</h2>
+            <p>I'm your personal AI assistant. Here's what I can do for you:</p>
+            <div class="capability-grid">
+                <div class="capability-item">
+                    <span class="capability-icon">📧</span>
+                    <span>Read, search &amp; send emails</span>
+                </div>
+                <div class="capability-item">
+                    <span class="capability-icon">📅</span>
+                    <span>Manage calendar events</span>
+                </div>
+                <div class="capability-item">
+                    <span class="capability-icon">🌤️</span>
+                    <span>Weather forecasts</span>
+                </div>
+                <div class="capability-item">
+                    <span class="capability-icon">📝</span>
+                    <span>Personal notes</span>
+                </div>
+            </div>
+            <p class="welcome-hint">Try: <em>"What meetings do I have this week?"</em>
+                or <em>"Any unread emails from my boss?"</em></p>
+        </div>
+    </div>
+
+    <!-- Loading indicator shown while HTMX request is in-flight -->
+    <div id="typing-indicator" class="typing-indicator htmx-indicator">
+        <span class="avatar-small">🤖</span>
+        <div class="typing-dots">
+            <span></span><span></span><span></span>
+        </div>
+    </div>
+</main>
+
+<footer class="chat-footer">
+    <form id="chat-form"
+          hx-post="/chat"
+          hx-target="#messages"
+          hx-swap="beforeend"
+          hx-indicator="#typing-indicator"
+          hx-on:htmx:after-request="resetForm()">
+        <div class="input-row">
+            <textarea name="message"
+                      id="message-input"
+                      class="message-input"
+                      placeholder="Ask me anything…"
+                      rows="1"
+                      required
+                      autocomplete="off">
+            </textarea>
+            <button type="submit" class="send-btn" id="send-btn" title="Send (Enter)">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                </svg>
+            </button>
+        </div>
+    </form>
+</footer>
+
+<script>
+    function resetForm() {
+        const input = document.getElementById('message-input');
+        input.value = '';
+        input.style.height = 'auto';
+        input.focus();
+        // Scroll to bottom after new message appears
+        const messages = document.getElementById('messages');
+        messages.scrollTop = messages.scrollHeight;
+    }
+
+    // Auto-resize textarea as user types
+    document.getElementById('message-input').addEventListener('input', function () {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+
+    // Submit on Enter (Shift+Enter inserts a newline)
+    document.getElementById('message-input').addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            document.getElementById('chat-form').dispatchEvent(
+                new Event('submit', { bubbles: true, cancelable: true })
+            );
+        }
+    });
+</script>
+
+</body>
+</html>
