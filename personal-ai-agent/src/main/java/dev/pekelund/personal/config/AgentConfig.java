@@ -1,5 +1,6 @@
 package dev.pekelund.personal.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.pekelund.personal.tools.*;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -10,9 +11,20 @@ import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestClient;
 
 @Configuration
 public class AgentConfig {
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper();
+    }
+
+    @Bean
+    public RestClient restClient() {
+        return RestClient.create();
+    }
 
     @Bean
     public ChatMemory chatMemory() {

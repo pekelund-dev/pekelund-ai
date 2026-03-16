@@ -15,9 +15,9 @@ public class WeatherTools {
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
 
-    public WeatherTools() {
-        this.restClient = RestClient.create();
-        this.objectMapper = new ObjectMapper();
+    public WeatherTools(RestClient restClient, ObjectMapper objectMapper) {
+        this.restClient = restClient;
+        this.objectMapper = objectMapper;
     }
 
     @Tool(description = "Get current weather and 7-day forecast for a location. Parameter: location (city name or 'city, country' like 'Stockholm' or 'London, UK')")

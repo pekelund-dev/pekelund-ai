@@ -15,10 +15,14 @@ import java.util.*;
 @Component
 public class NotesTools {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     @Value("${personal.notes.file:notes.json}")
     private String notesFile;
+
+    public NotesTools(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     @Tool(description = "Save a personal note. Parameters: title (short title for the note), content (the note content)")
     public String saveNote(String title, String content) {
