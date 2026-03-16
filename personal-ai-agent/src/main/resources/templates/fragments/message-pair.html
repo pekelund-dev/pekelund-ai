@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+  HTMX fragment returned by POST /chat.
+  Appended into the #messages div via hx-swap="beforeend".
+-->
+<div th:fragment="message-pair" class="message-pair">
+
+    <!-- User message (right-aligned) -->
+    <div class="message user-message">
+        <div class="bubble" th:text="${userMessage}"></div>
+        <div class="avatar user-avatar">You</div>
+    </div>
+
+    <!-- AI response (left-aligned) -->
+    <div class="message ai-message">
+        <div class="avatar ai-avatar">🤖</div>
+        <div class="bubble ai-bubble" th:text="${aiResponse}"></div>
+    </div>
+
+</div>
+</body>
+</html>
