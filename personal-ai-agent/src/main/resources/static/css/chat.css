@@ -177,6 +177,7 @@ body {
 /* AI message: left-aligned */
 .ai-message {
     align-self: flex-start;
+    align-items: flex-start;
 }
 
 /* ===== Avatars ===== */
@@ -226,6 +227,45 @@ body {
     border: 1px solid var(--border);
     border-bottom-left-radius: 4px;
     color: var(--text);
+}
+
+/* ===== AI bubble wrapper (bubble + model badge) ===== */
+.ai-bubble-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    max-width: 100%;
+}
+
+/* ===== Model badge ===== */
+.model-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    align-self: flex-start;
+    border: 1px solid;
+    transition: opacity 0.15s;
+}
+
+.model-badge__icon { font-size: 0.8rem; }
+
+/* Simple tier: muted blue */
+.model-badge--simple {
+    background: rgba(108, 127, 255, 0.1);
+    border-color: rgba(108, 127, 255, 0.25);
+    color: #8899ff;
+}
+
+/* Complex tier: purple accent */
+.model-badge--complex {
+    background: rgba(160, 100, 255, 0.12);
+    border-color: rgba(160, 100, 255, 0.3);
+    color: #c084fc;
 }
 
 /* ===== Typing indicator ===== */

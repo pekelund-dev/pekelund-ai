@@ -1,7 +1,8 @@
 package dev.pekelund.personal.controller;
 
+import dev.pekelund.personal.agent.AgentService;
+import dev.pekelund.personal.agent.ModelRouter;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,10 +16,10 @@ public class UiController {
 
     private static final String CONVERSATION_ID_KEY = "conversationId";
 
-    private final ChatClient chatClient;
+    private final AgentService agentService;
 
-    public UiController(ChatClient chatClient) {
-        this.chatClient = chatClient;
+    public UiController(AgentService agentService) {
+        this.agentService = agentService;
     }
 
     @GetMapping("/")
@@ -41,15 +42,14 @@ public class UiController {
             session.setAttribute(CONVERSATION_ID_KEY, conversationId);
         }
 
-        final String cid = conversationId;
-        String response = chatClient.prompt()
-                .user(message)
-                .advisors(a -> a.param("chat_memory_conversation_id", cid))
-                .call()
-                .content();
+        AgentService.ChatResult result = agentService.chat(message, conversationId);
 
         model.addAttribute("userMessage", message);
-        model.addAttribute("aiResponse", response);
+        model.addAttribute("aiResponse", result.content());
+        model.addAttribute("modelLabel", result.modelLabel());
+        model.addAttribute("modelIcon", result.modelIcon());
+        model.addAttribute("isComplex", result.complexity() == ModelRouter.TaskComplexity.COMPLEX);
         return "fragments/message-pair :: message-pair";
     }
 }
+

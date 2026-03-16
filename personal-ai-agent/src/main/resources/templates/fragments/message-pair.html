@@ -16,7 +16,15 @@
     <!-- AI response (left-aligned) -->
     <div class="message ai-message">
         <div class="avatar ai-avatar">🤖</div>
-        <div class="bubble ai-bubble" th:text="${aiResponse}"></div>
+        <div class="ai-bubble-wrapper">
+            <div class="bubble ai-bubble" th:text="${aiResponse}"></div>
+            <!-- Model badge: shows which model tier handled this request -->
+            <div class="model-badge"
+                 th:classappend="${isComplex} ? 'model-badge--complex' : 'model-badge--simple'">
+                <span class="model-badge__icon" th:text="${modelIcon}"></span>
+                <span class="model-badge__label" th:text="${modelLabel}"></span>
+            </div>
+        </div>
     </div>
 
 </div>

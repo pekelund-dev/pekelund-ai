@@ -1,6 +1,6 @@
 package dev.pekelund.personal.controller;
 
-import org.springframework.ai.chat.client.ChatClient;
+import dev.pekelund.personal.agent.AgentService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -9,10 +9,10 @@ import java.util.UUID;
 @RequestMapping("/api")
 public class ChatController {
 
-    private final ChatClient chatClient;
+    private final AgentService agentService;
 
-    public ChatController(ChatClient chatClient) {
-        this.chatClient = chatClient;
+    public ChatController(AgentService agentService) {
+        this.agentService = agentService;
     }
 
     @PostMapping("/chat")
@@ -21,15 +21,11 @@ public class ChatController {
             ? request.conversationId()
             : UUID.randomUUID().toString();
 
-        String response = chatClient.prompt()
-                .user(request.message())
-                .advisors(a -> a.param("chat_memory_conversation_id", conversationId))
-                .call()
-                .content();
+        AgentService.ChatResult result = agentService.chat(request.message(), conversationId);
 
-        return new ChatResponse(response, conversationId);
+        return new ChatResponse(result.content(), conversationId, result.modelUsed());
     }
 
     public record ChatRequest(String message, String conversationId) {}
-    public record ChatResponse(String response, String conversationId) {}
+    public record ChatResponse(String response, String conversationId, String modelUsed) {}
 }
