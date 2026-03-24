@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: familiar-water
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  port: 8092
+
+logging:
+  level:
+    dev.pekelund: DEBUG

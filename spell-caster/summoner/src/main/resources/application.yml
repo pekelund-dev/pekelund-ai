@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: summoner
+  ai:
+    google:
+      genai:
+        api-key: ${GEMINI_API_KEY}
+        chat:
+          options:
+            model: gemini-2.0-flash
+            temperature: 0.2
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  port: 8090
+
+summoner:
+  familiars:
+    fire-url: ${FAMILIAR_FIRE_URL:http://localhost:8091}
+    water-url: ${FAMILIAR_WATER_URL:http://localhost:8092}
+    earth-url: ${FAMILIAR_EARTH_URL:http://localhost:8093}
+
+logging:
+  level:
+    dev.pekelund: DEBUG
+    org.springframework.ai: INFO

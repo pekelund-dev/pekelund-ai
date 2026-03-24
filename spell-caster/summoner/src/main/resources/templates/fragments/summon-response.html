@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+    Fragment: summon-response :: result
+    Returned by POST /ui/summon.
+
+    HTMX replaces #result-area with the main fragment content (the result box).
+    The hx-swap-oob elements are processed by HTMX out-of-band to update
+    #flow-panel without additional round-trips.
+-->
+<th:block th:fragment="result">
+
+    <!-- ── Main content → replaces #result-area ─────────────── -->
+    <div class="result-box"
+         th:classappend="${blocked} ? 'blocked' : (${error} ? 'error' : 'success')"
+         th:text="${result}">
+    </div>
+
+    <!-- ── OOB swap → replaces #flow-panel ──────────────────── -->
+    <div id="flow-panel" hx-swap-oob="true">
+        <div th:if="${flowEvents.isEmpty()}" class="flow-events">
+            <p class="placeholder">No flow events captured for this session.</p>
+        </div>
+        <div th:unless="${flowEvents.isEmpty()}" class="flow-events">
+            <div th:each="event : ${flowEvents}"
+                 class="flow-event"
+                 th:classappend="'event-' + ${event.cssType()}">
+                <span class="event-emoji" th:text="${event.emoji()}"></span>
+                <span class="event-msg"   th:text="${event.message()}"></span>
+                <span class="event-time"  th:text="${event.time()}"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── OOB swap → refreshes #familiars-panel cooldowns ───── -->
+    <div id="familiars-panel" hx-swap-oob="true">
+        <div th:each="f : ${familiars}"
+             class="familiar-card"
+             th:classappend="${f.statusBadge()}">
+
+            <div class="familiar-name" th:text="${f.displayName()}"></div>
+
+            <div class="badges">
+                <span class="badge"
+                      th:classappend="'badge-' + ${f.statusBadge()}"
+                      th:text="${f.statusLabel()}"></span>
+                <span class="badge"
+                      th:classappend="'badge-' + ${f.elementClass()}"
+                      th:text="${f.pattern()}"></span>
+                <span class="badge badge-port" th:text="'Port ' + ${f.port()}"></span>
+            </div>
+
+            <div th:if="${f.cooldownRemaining() > 0}" class="cooldown-bar">
+                <div class="cooldown-bar-fill"
+                     th:style="'width: ' + ${f.cooldownPercent(f.maxCooldownSeconds())} + '%'"></div>
+            </div>
+        </div>
+    </div>
+
+</th:block>
+
+</body>
+</html>

@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>🔮 The Summoner — Spell Caster</title>
+    <script src="https://unpkg.com/htmx.org@2.0.4" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --bg:           #0d0c1a;
+            --surface:      #13122a;
+            --card:         #1a1836;
+            --border:       #2a2850;
+            --primary:      #7c3aed;
+            --primary-h:    #6d28d9;
+            --gold:         #f59e0b;
+            --success:      #10b981;
+            --danger:       #ef4444;
+            --text:         #e2e0f0;
+            --muted:        #7c7a9c;
+            --fire:         #f97316;
+            --water:        #3b82f6;
+            --earth:        #84cc16;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-size: 14px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Header ─────────────────────────────────────────── */
+        .header {
+            background: linear-gradient(135deg, #140d30 0%, #0d0c1a 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 0.9rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .header-icon { font-size: 1.6rem; }
+        .header-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a78bfa 0%, #f59e0b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header-sub { color: var(--muted); font-size: 0.75rem; margin-top: 1px; }
+
+        /* ── Layout ─────────────────────────────────────────── */
+        .layout {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            flex: 1;
+        }
+
+        .sidebar {
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 1.25rem 1rem;
+            overflow-y: auto;
+        }
+
+        .main { padding: 1.25rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; }
+
+        /* ── Section labels ─────────────────────────────────── */
+        .section-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            margin-bottom: 0.75rem;
+        }
+
+        /* ── Card ────────────────────────────────────────────── */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 0.6rem;
+            padding: 1rem 1.1rem;
+        }
+
+        /* ── Familiar cards (sidebar) ───────────────────────── */
+        .familiar-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 0.75rem 0.85rem;
+            margin-bottom: 0.6rem;
+            transition: border-color 0.2s;
+        }
+        .familiar-card.online   { border-left-color: var(--success); }
+        .familiar-card.offline  { border-left-color: var(--danger);  opacity: 0.65; }
+        .familiar-card.cooldown { border-left-color: var(--gold);    }
+
+        .familiar-name { font-size: 0.875rem; font-weight: 600; margin-bottom: 0.35rem; }
+
+        .badges { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+        .badge {
+            padding: 0.1rem 0.45rem;
+            border-radius: 0.25rem;
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .badge-online   { background: rgba(16,185,129,.18); color: var(--success); }
+        .badge-offline  { background: rgba(239,68,68,.18);  color: var(--danger);  }
+        .badge-cooldown { background: rgba(245,158,11,.18); color: var(--gold);    }
+        .badge-fire     { background: rgba(249,115,22,.15); color: var(--fire);    }
+        .badge-water    { background: rgba(59,130,246,.15); color: var(--water);   }
+        .badge-earth    { background: rgba(132,204,22,.15); color: var(--earth);   }
+        .badge-port     { background: rgba(255,255,255,.07); color: var(--muted);  }
+
+        .cooldown-bar { height: 2px; background: var(--border); border-radius: 1px; margin-top: 0.5rem; overflow: hidden; }
+        .cooldown-bar-fill { height: 100%; background: var(--gold); transition: width 1s linear; }
+
+        .sidebar-footer {
+            margin-top: 1.25rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.65rem;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        /* ── Command form ───────────────────────────────────── */
+        .command-row { display: flex; gap: 0.6rem; margin-top: 0.75rem; }
+        .command-input {
+            flex: 1;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 0.4rem;
+            padding: 0.6rem 0.85rem;
+            color: var(--text);
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .command-input:focus { border-color: var(--primary); }
+
+        .summon-btn {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 0.4rem;
+            padding: 0.6rem 1.2rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s, opacity 0.2s;
+        }
+        .summon-btn:hover:not(:disabled) { background: var(--primary-h); }
+        .summon-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* ── HTMX loading indicator ─────────────────────────── */
+        .spinner {
+            display: none;
+            color: var(--muted);
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            animation: pulse 1.4s ease-in-out infinite;
+        }
+        .htmx-request .spinner { display: block; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+        .session-line { margin-top: 0.5rem; font-size: 0.7rem; color: var(--muted); }
+        #session-display { font-family: monospace; }
+
+        /* ── Flow events ────────────────────────────────────── */
+        .flow-events { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.6rem; }
+        .flow-event {
+            display: flex;
+            align-items: baseline;
+            gap: 0.6rem;
+            padding: 0.45rem 0.7rem;
+            border-radius: 0.35rem;
+            background: var(--surface);
+            border-left: 2.5px solid var(--border);
+            animation: fadeSlide 0.25s ease-out;
+        }
+        @keyframes fadeSlide { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+        .event-command  { border-left-color: var(--primary); }
+        .event-routing  { border-left-color: #8b5cf6; }
+        .event-selected { border-left-color: var(--gold); }
+        .event-invoke   { border-left-color: var(--fire); }
+        .event-cooldown { border-left-color: var(--danger); }
+        .event-result   { border-left-color: var(--success); }
+        .event-error    { border-left-color: var(--danger); }
+
+        .event-emoji   { font-size: 0.9rem; flex-shrink: 0; }
+        .event-msg     { flex: 1; line-height: 1.4; }
+        .event-time    { font-size: 0.65rem; color: var(--muted); white-space: nowrap; font-family: monospace; }
+
+        /* ── Result area ────────────────────────────────────── */
+        .result-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 0.4rem;
+            padding: 0.85rem 1rem;
+            margin-top: 0.6rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.65;
+            font-size: 0.85rem;
+        }
+        .result-box.blocked { border-left: 3px solid var(--danger);  }
+        .result-box.error   { border-left: 3px solid var(--gold);    }
+        .result-box.success { border-left: 3px solid var(--success); }
+
+        .placeholder { color: var(--muted); font-style: italic; font-size: 0.8rem; }
+
+        /* ── Responsive ─────────────────────────────────────── */
+        @media (max-width: 680px) {
+            .layout { grid-template-columns: 1fr; }
+            .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────── -->
+<header class="header">
+    <span class="header-icon">🔮</span>
+    <div>
+        <div class="header-title">The Summoner</div>
+        <div class="header-sub">Multi-Agent Spell Casting System · Java 25 · Spring Boot 4 · Spring AI 2.0</div>
+    </div>
+</header>
+
+<div class="layout">
+
+    <!-- ── Sidebar: Familiars ────────────────────────────────── -->
+    <aside class="sidebar">
+        <div class="section-label">⚡ Familiars</div>
+
+        <!--
+            HTMX polls /ui/familiars every 5 s so cooldown counts refresh automatically.
+            "load" triggers the initial fetch; "every 5s" keeps it up to date.
+        -->
+        <div id="familiars-panel"
+             hx-get="/ui/familiars"
+             hx-trigger="load, every 5s"
+             hx-target="#familiars-panel"
+             hx-swap="innerHTML">
+            <p class="placeholder">Discovering familiars…</p>
+        </div>
+
+        <div class="sidebar-footer">
+            Auto-refreshes every 5 s.<br/>
+            🟢 Online &nbsp;·&nbsp; 🔴 Offline &nbsp;·&nbsp; 🟡 Cooldown
+        </div>
+    </aside>
+
+    <!-- ── Main content ──────────────────────────────────────── -->
+    <main class="main">
+
+        <!-- Command form -->
+        <div class="card">
+            <div class="section-label">🪄 Cast a Spell</div>
+            <!--
+                hx-post sends to /ui/summon.
+                hx-target replaces #result-area with the main fragment.
+                The response also contains hx-swap-oob elements for #flow-panel.
+                hx-disabled-elt disables the submit button while the request is in flight.
+            -->
+            <form hx-post="/ui/summon"
+                  hx-target="#result-area"
+                  hx-swap="innerHTML"
+                  hx-indicator="#spinner"
+                  hx-disabled-elt="find button[type='submit']">
+
+                <input type="hidden" id="sessionId" name="sessionId" th:value="${sessionId}"/>
+
+                <div class="command-row">
+                    <input class="command-input"
+                           type="text"
+                           name="command"
+                           id="commandInput"
+                           placeholder="e.g. Attack the dragon with fire!  or  Cast a water spell on the troll."
+                           required
+                           autocomplete="off"/>
+                    <button class="summon-btn" type="submit">⚡ Summon</button>
+                </div>
+            </form>
+
+            <div id="spinner" class="spinner">🌀 The Summoner is channeling energy through the familiars…</div>
+            <div class="session-line">Session: <span id="session-display" th:text="${sessionId}"></span></div>
+        </div>
+
+        <!-- Execution Flow -->
+        <div class="card">
+            <div class="section-label">📜 Execution Flow</div>
+            <div id="flow-panel">
+                <p class="placeholder">Flow events will appear here after casting a spell.</p>
+            </div>
+        </div>
+
+        <!-- Result -->
+        <div class="card">
+            <div class="section-label">✨ Spell Result</div>
+            <div id="result-area">
+                <p class="placeholder">Cast a spell to see the result.</p>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    /**
+     * Persist the sessionId in localStorage so memory is maintained across
+     * page reloads (the Summoner's ChatMemory uses the same sessionId key).
+     */
+    (function () {
+        const KEY = 'spellcaster_session';
+        let sid = localStorage.getItem(KEY);
+        if (!sid) {
+            sid = crypto.randomUUID ? crypto.randomUUID()
+                : ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+                    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
+            localStorage.setItem(KEY, sid);
+        }
+        document.getElementById('sessionId').value = sid;
+        document.getElementById('session-display').textContent = sid;
+    })();
+</script>
+
+</body>
+</html>

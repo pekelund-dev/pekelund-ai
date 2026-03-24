@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+    Fragment: familiars :: cards
+    Returned by GET /ui/familiars and injected into #familiars-panel.
+    The outer div has id="familiars-panel" so HTMX replaces the whole element
+    with innerHTML swap (the fragment content replaces the panel's inner HTML).
+-->
+<th:block th:fragment="cards">
+    <div th:each="f : ${familiars}"
+         class="familiar-card"
+         th:classappend="${f.statusBadge()}">
+
+        <div class="familiar-name" th:text="${f.displayName()}"></div>
+
+        <div class="badges">
+            <!-- Online / Offline / Cooldown badge -->
+            <span class="badge"
+                  th:classappend="'badge-' + ${f.statusBadge()}"
+                  th:text="${f.statusLabel()}"></span>
+
+            <!-- Element / pattern badge -->
+            <span class="badge"
+                  th:classappend="'badge-' + ${f.elementClass()}"
+                  th:text="${f.pattern()}"></span>
+
+            <!-- Port badge -->
+            <span class="badge badge-port" th:text="'Port ' + ${f.port()}"></span>
+        </div>
+
+        <!-- Cooldown progress bar: full = just entered cooldown, empty = ready -->
+        <div th:if="${f.cooldownRemaining() > 0}" class="cooldown-bar">
+            <div class="cooldown-bar-fill"
+                 th:style="'width: ' + ${f.cooldownPercent(f.maxCooldownSeconds())} + '%'"></div>
+        </div>
+    </div>
+</th:block>
+
+</body>
+</html>
