@@ -3,17 +3,15 @@ package dev.pekelund.summoner.service;
 import dev.pekelund.summoner.annotation.CooldownProtected;
 import dev.pekelund.summoner.model.AgentCard;
 import dev.pekelund.summoner.model.ExecuteRequest;
-import dev.pekelund.summoner.model.ExecuteResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
-import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * The Summoner Service — Orchestrator with LLM-based routing.
@@ -23,23 +21,43 @@ import java.util.Map;
  * 2. Enforce cooldown governance via @CooldownProtected (intercepted by CooldownAspect)
  * 3. Maintain short-term memory via MessageChatMemoryAdvisor
  * 4. Route requests to the appropriate familiar's REST endpoint
+ * 5. Emit flow events to FlowTracker for Web UI visibility
  */
 @Service
 public class SummonerService {
 
     private static final Logger log = LoggerFactory.getLogger(SummonerService.class);
 
+    /**
+     * Carries the active sessionId through the call stack so inner methods
+     * (including those intercepted by AOP) can emit flow events without
+     * an explicit parameter. Virtual-thread-safe since each virtual thread
+     * has its own ThreadLocal storage.
+     *
+     * <p><b>Lifecycle contract:</b> always set in {@link #summon} and removed in
+     * its {@code finally} block — never leaked across requests.
+     *
+     * @implNote Java 25 ships {@code ScopedValue} as a final feature (JEP 481),
+     *           which is the recommended replacement for this pattern.
+     *           Migration would allow strict structured propagation to forked tasks
+     *           as well; the change is mechanical and backwards-compatible.
+     */
+    private static final ThreadLocal<String> sessionContext = new ThreadLocal<>();
+
     private final ChatClient chatClient;
     private final AgentDiscoveryService agentDiscoveryService;
     private final RestClient restClient;
+    private final FlowTracker flowTracker;
 
     public SummonerService(
             ChatClient chatClient,
             AgentDiscoveryService agentDiscoveryService,
-            RestClient restClient) {
+            RestClient restClient,
+            FlowTracker flowTracker) {
         this.chatClient = chatClient;
         this.agentDiscoveryService = agentDiscoveryService;
         this.restClient = restClient;
+        this.flowTracker = flowTracker;
     }
 
     /**
@@ -47,17 +65,33 @@ public class SummonerService {
      * Uses Gemini LLM to determine intent and target familiar.
      *
      * @param command   the user's spell-casting command
-     * @param sessionId conversation session ID for memory
+     * @param sessionId conversation session ID for memory and flow tracking
      * @return the familiar's response
      */
     public String summon(String command, String sessionId) {
+        sessionContext.set(sessionId);
+        try {
+            return doSummon(command, sessionId);
+        } finally {
+            sessionContext.remove();
+        }
+    }
+
+    private String doSummon(String command, String sessionId) {
         log.info("🔮 Summoner received command: '{}' (session: {})", command, sessionId);
+        flowTracker.track(sessionId, "COMMAND", "📨", "Command received: \"" + command + "\"", null);
 
         List<AgentCard> agents = agentDiscoveryService.getDiscoveredAgents();
 
+        if (agents.isEmpty()) {
+            String msg = "No familiars discovered — cannot route. Start the familiar services first.";
+            flowTracker.track(sessionId, "ERROR", "⚠️", msg, null);
+            return "⚠️ " + msg;
+        }
+
         String agentDescriptions = agents.stream()
             .map(a -> "- " + a.name() + ": " + a.description())
-            .collect(java.util.stream.Collectors.joining("\n"));
+            .collect(Collectors.joining("\n"));
 
         String systemPrompt = """
                 You are The Summoner, a powerful orchestrator managing three elemental familiars.
@@ -73,6 +107,8 @@ public class SummonerService {
                 - Do NOT summon the same familiar twice in a row (check memory).
                 """.formatted(agentDescriptions);
 
+        flowTracker.track(sessionId, "ROUTING", "🧠", "Querying Gemini LLM for routing decision...", null);
+
         String routing = chatClient.prompt()
             .system(systemPrompt)
             .user(command)
@@ -81,8 +117,10 @@ public class SummonerService {
             .content();
 
         log.info("🔮 LLM routing decision: '{}'", routing);
+        flowTracker.track(sessionId, "ROUTING", "🔀", "LLM decision: " + routing, null);
 
         if (routing == null || !routing.contains("|")) {
+            flowTracker.track(sessionId, "ERROR", "⚠️", "Could not parse routing decision from LLM.", null);
             return "⚠️ Summoner could not determine routing. Command: " + command;
         }
 
@@ -90,7 +128,20 @@ public class SummonerService {
         String familiarName = parts[0].trim();
         String target = parts.length > 1 ? parts[1].trim() : "unknown";
 
-        return invokeFamiliar(familiarName, target, agents);
+        flowTracker.track(sessionId, "SELECTED", "🎯",
+                "Selected: " + familiarName + "  ·  Target: " + target, familiarName);
+
+        String result = invokeFamiliar(familiarName, target, agents);
+
+        if (result.startsWith("⛔")) {
+            flowTracker.track(sessionId, "COOLDOWN", "⛔", result, familiarName);
+        } else if (result.startsWith("⚠️")) {
+            flowTracker.track(sessionId, "ERROR", "⚠️", "Familiar returned an error.", familiarName);
+        } else {
+            flowTracker.track(sessionId, "RESULT", "✅", "Familiar responded successfully.", familiarName);
+        }
+
+        return result;
     }
 
     /**
@@ -132,7 +183,11 @@ public class SummonerService {
 
     @SuppressWarnings("unchecked")
     private String callFamiliar(String endpoint, String target) {
+        String sessionId = sessionContext.get();
         log.info("📡 Calling familiar at {} with target: {}", endpoint, target);
+        if (sessionId != null) {
+            flowTracker.track(sessionId, "INVOKE", "📡", "Calling familiar endpoint: " + endpoint, null);
+        }
         try {
             Map<String, String> response = restClient.post()
                 .uri(endpoint)
