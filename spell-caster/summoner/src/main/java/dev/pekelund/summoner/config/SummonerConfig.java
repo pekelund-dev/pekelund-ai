@@ -10,15 +10,23 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
 
+import java.time.Clock;
+
 /**
  * Configuration for The Summoner's AI infrastructure.
  *
+ * - Clock: System UTC clock (injectable for testing)
  * - ChatMemory: In-memory short-term memory (last 20 messages)
  * - ChatClient: Gemini-powered client with MessageChatMemoryAdvisor
  * - RestClient: For calling familiar REST endpoints
  */
 @Configuration
 public class SummonerConfig {
+
+    @Bean
+    public Clock clock() {
+        return Clock.systemUTC();
+    }
 
     @Bean
     public ChatMemory chatMemory() {

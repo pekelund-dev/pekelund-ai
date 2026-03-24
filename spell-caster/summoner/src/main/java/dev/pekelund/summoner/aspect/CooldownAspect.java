@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -19,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * is even contacted — without modifying any agent logic.
  *
  * This is the "Plugin" governance layer described in the architecture.
+ * Accepts a {@link Clock} for testability.
  */
 @Aspect
 @Component
@@ -26,7 +28,12 @@ public class CooldownAspect {
 
     private static final Logger log = LoggerFactory.getLogger(CooldownAspect.class);
 
+    private final Clock clock;
     private final ConcurrentHashMap<String, Instant> lastInvocationTimes = new ConcurrentHashMap<>();
+
+    public CooldownAspect(Clock clock) {
+        this.clock = clock;
+    }
 
     @Around("@annotation(cooldownProtected)")
     public Object enforceCooldown(ProceedingJoinPoint joinPoint, CooldownProtected cooldownProtected) throws Throwable {
@@ -34,7 +41,7 @@ public class CooldownAspect {
         long cooldownSeconds = cooldownProtected.cooldownSeconds();
 
         Instant lastCall = lastInvocationTimes.get(familiarName);
-        Instant now = Instant.now();
+        Instant now = clock.instant();
 
         if (lastCall != null) {
             long secondsSinceLastCall = now.getEpochSecond() - lastCall.getEpochSecond();

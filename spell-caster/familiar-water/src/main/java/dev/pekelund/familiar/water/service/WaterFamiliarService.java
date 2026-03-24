@@ -41,7 +41,8 @@ public class WaterFamiliarService {
     public String execute(String target) {
         log.info("🌊 Water Familiar activating parallel fan-out/fan-in for target: {}", target);
 
-        // Note: StructuredTaskScope is a preview API in Java 25; requires --enable-preview at compile/runtime.
+        // StructuredTaskScope was introduced as a preview API in Java 21+ (JEP 453) and remains preview in Java 25.
+        // Requires --enable-preview at compile and runtime.
         try (var scope = StructuredTaskScope.open(StructuredTaskScope.Joiner.<String>allSuccessfulOrThrow())) {
             // Fan-out: launch both channelers simultaneously on virtual threads
             var nexusTask = scope.fork(() -> {
