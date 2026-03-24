@@ -57,7 +57,7 @@ public class SummonerService {
 
         String agentDescriptions = agents.stream()
             .map(a -> "- " + a.name() + ": " + a.description())
-            .reduce("", (a, b) -> a + "\n" + b);
+            .collect(java.util.stream.Collectors.joining("\n"));
 
         String systemPrompt = """
                 You are The Summoner, a powerful orchestrator managing three elemental familiars.
@@ -133,13 +133,18 @@ public class SummonerService {
     @SuppressWarnings("unchecked")
     private String callFamiliar(String endpoint, String target) {
         log.info("📡 Calling familiar at {} with target: {}", endpoint, target);
-        Map<String, String> response = restClient.post()
-            .uri(endpoint)
-            .body(new ExecuteRequest(target))
-            .retrieve()
-            .body(Map.class);
+        try {
+            Map<String, String> response = restClient.post()
+                .uri(endpoint)
+                .body(new ExecuteRequest(target))
+                .retrieve()
+                .body(Map.class);
 
-        if (response == null) return "⚠️ Familiar returned no response.";
-        return response.getOrDefault("result", "⚠️ No result in response.");
+            if (response == null) return "⚠️ Familiar returned no response.";
+            return response.getOrDefault("result", "⚠️ No result in response.");
+        } catch (Exception e) {
+            log.error("❌ Failed to contact familiar at {}: {}", endpoint, e.getMessage());
+            return "⚠️ Failed to contact familiar at " + endpoint + ": " + e.getMessage();
+        }
     }
 }
