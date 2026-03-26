@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+  HTMX-fragment som returneras av POST /chat/{agentType}.
+  Läggs till i #messages via hx-swap="beforeend".
+-->
+<div th:fragment="message-pair" class="message-pair">
+
+    <!-- Användarens meddelande (högerställt) -->
+    <div class="message user-message">
+        <div class="bubble" th:text="${userMessage}"></div>
+        <div class="avatar user-avatar">Du</div>
+    </div>
+
+    <!-- AI-svar (vänsterställt) -->
+    <div class="message ai-message">
+        <div class="avatar ai-avatar">🤖</div>
+        <div class="ai-bubble-wrapper">
+            <div class="bubble ai-bubble" th:utext="${#strings.replace(#strings.escapeXml(aiResponse),'&#10;','&lt;br/&gt;')}"></div>
+            <!-- Modell-badge: visar vilken modelltier som hanterade förfrågan -->
+            <div class="model-badge"
+                 th:classappend="${isComplex} ? 'model-badge--complex' : 'model-badge--simple'">
+                <span class="model-badge__icon" th:text="${modelIcon}"></span>
+                <span class="model-badge__label" th:text="${modelLabel}"></span>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

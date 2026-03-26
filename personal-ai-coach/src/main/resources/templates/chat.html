@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'AI Coach — ' + ${agentType.displayName}">AI Coach — Chatt</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script src="https://unpkg.com/htmx.org@2.0.4" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="/" class="sidebar-logo-link">
+                <span class="sidebar-logo">🎯</span>
+                <h2>AI Coach</h2>
+            </a>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="/" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span>Översikt</span>
+            </a>
+            <div th:each="agent : ${agents}" th:if="${agent.name() != 'GENERAL'}">
+                <a th:href="@{/chat/{type}(type=${agent.name()})}"
+                   th:classappend="${agent == agentType} ? ' active' : ''"
+                   class="nav-item">
+                    <span class="nav-icon" th:text="${agent.icon}"></span>
+                    <span th:text="${agent.displayName}"></span>
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Chat area -->
+    <main class="main-content chat-layout">
+        <header class="chat-header">
+            <span class="chat-agent-icon" th:text="${agentType.icon}">🤖</span>
+            <div>
+                <h1 th:text="${agentType.displayName}">Agent</h1>
+                <p th:text="${agentType.description}">Beskrivning</p>
+            </div>
+        </header>
+
+        <div id="messages"
+             class="messages chat-messages"
+             hx-on:htmx:after-swap="this.scrollTop = this.scrollHeight">
+
+            <!-- Welcome message -->
+            <div class="welcome-card">
+                <h2>
+                    <span th:text="${agentType.icon}">🤖</span>
+                    <span th:text="${agentType.displayName}">Agent</span>
+                </h2>
+                <p th:text="${agentType.description}">Beskrivning</p>
+                <p class="welcome-hint">Skriv ett meddelande för att komma igång!</p>
+            </div>
+        </div>
+
+        <!-- Typing indicator -->
+        <div id="typing-indicator" class="typing-indicator htmx-indicator">
+            <span class="avatar-small" th:text="${agentType.icon}">🤖</span>
+            <div class="typing-dots">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+
+        <footer class="chat-footer">
+            <form id="chat-form"
+                  th:hx-post="@{/chat/{type}(type=${agentType.name()})}"
+                  hx-target="#messages"
+                  hx-swap="beforeend"
+                  hx-indicator="#typing-indicator"
+                  hx-on:htmx:after-request="resetForm()">
+                <div class="input-row">
+                    <textarea name="message"
+                              id="message-input"
+                              class="message-input"
+                              placeholder="Skriv ditt meddelande…"
+                              rows="1"
+                              required
+                              autocomplete="off"></textarea>
+                    <button type="submit" class="send-btn" title="Skicka (Enter)">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        </svg>
+                    </button>
+                </div>
+            </form>
+        </footer>
+    </main>
+</div>
+
+<script>
+    function resetForm() {
+        const input = document.getElementById('message-input');
+        input.value = '';
+        input.style.height = 'auto';
+        input.focus();
+        const messages = document.getElementById('messages');
+        messages.scrollTop = messages.scrollHeight;
+    }
+
+    document.getElementById('message-input').addEventListener('input', function () {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+
+    document.getElementById('message-input').addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            document.getElementById('chat-form').dispatchEvent(
+                new Event('submit', { bubbles: true, cancelable: true })
+            );
+        }
+    });
+</script>
+
+</body>
+</html>

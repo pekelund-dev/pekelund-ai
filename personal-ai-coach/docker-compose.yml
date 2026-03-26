@@ -1,0 +1,65 @@
+###############################################################################
+# Personal AI Coach — Docker Compose
+#
+# Services:
+#   postgres    — PostgreSQL 16 with pgvector extension (SQL + vector database)
+#   coach-app   — Personal AI Coach Spring Boot application
+#
+# Quick start:
+#   export GEMINI_API_KEY=AIza...
+#   export GOOGLE_CLIENT_ID=your-client-id
+#   export GOOGLE_CLIENT_SECRET=your-client-secret
+#   docker compose up --build
+#
+# App is available at http://localhost:8080
+###############################################################################
+
+services:
+
+  # ── PostgreSQL with pgvector ──────────────────────────────────────────────
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: coach_postgres
+    environment:
+      POSTGRES_DB:       coach_db
+      POSTGRES_USER:     coach
+      POSTGRES_PASSWORD: coach_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U coach -d coach_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ── Personal AI Coach Application ────────────────────────────────────────
+  coach-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: coach_app
+    environment:
+      DB_URL:               jdbc:postgresql://postgres:5432/coach_db
+      DB_USERNAME:           coach
+      DB_PASSWORD:           coach_secret
+      GEMINI_API_KEY:        ${GEMINI_API_KEY:?Set GEMINI_API_KEY}
+      GOOGLE_CLIENT_ID:      ${GOOGLE_CLIENT_ID:?Set GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET:  ${GOOGLE_CLIENT_SECRET:?Set GOOGLE_CLIENT_SECRET}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  postgres_data:
+    driver: local
