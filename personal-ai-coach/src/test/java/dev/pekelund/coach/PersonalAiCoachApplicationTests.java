@@ -21,7 +21,8 @@ import static org.mockito.Mockito.when;
 @TestPropertySource(properties = {
     "spring.autoconfigure.exclude=" +
         "org.springframework.ai.autoconfigure.google.genai.GoogleGenAiAutoConfiguration," +
-        "org.springframework.ai.autoconfigure.vectorstore.pgvector.PgVectorStoreAutoConfiguration"
+        "org.springframework.ai.vectorstore.pgvector.autoconfigure.PgVectorStoreAutoConfiguration",
+    "spring.main.allow-bean-definition-overriding=true"
 })
 class PersonalAiCoachApplicationTests {
 

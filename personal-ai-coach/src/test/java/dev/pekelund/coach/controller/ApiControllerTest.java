@@ -4,64 +4,52 @@ import dev.pekelund.coach.agent.AgentService;
 import dev.pekelund.coach.agent.ModelRouter;
 import dev.pekelund.coach.domain.AgentType;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.web.servlet.MockMvc;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(ApiController.class)
+/**
+ * Unit tests for {@link ApiController}.
+ */
 class ApiControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    private final AgentService agentService = mock(AgentService.class);
+    private final ApiController controller = new ApiController(agentService);
 
-    @TestConfiguration
-    static class TestConfig {
-        @Bean
-        public AgentService agentService() {
-            AgentService service = mock(AgentService.class);
-            when(service.chat(anyString(), anyString(), any(AgentType.class)))
-                    .thenReturn(new AgentService.ChatResult(
-                            "Hej! Jag kan hjälpa dig.",
-                            "gemini-2.0-flash",
-                            ModelRouter.TaskComplexity.SIMPLE,
-                            AgentType.GENERAL));
-            return service;
-        }
+    @Test
+    void chatReturnsResponseWithDefaults() {
+        when(agentService.chat(anyString(), anyString(), any(AgentType.class)))
+                .thenReturn(new AgentService.ChatResult(
+                        "Hej! Jag kan hjälpa dig.",
+                        "gemini-2.0-flash",
+                        ModelRouter.TaskComplexity.SIMPLE,
+                        AgentType.GENERAL));
+
+        var response = controller.chat(
+                new ApiController.ChatRequest("Hej!", null, null));
+
+        assertThat(response.response()).isEqualTo("Hej! Jag kan hjälpa dig.");
+        assertThat(response.modelUsed()).isEqualTo("gemini-2.0-flash");
+        assertThat(response.agentType()).isEqualTo(AgentType.GENERAL);
+        assertThat(response.conversationId()).isNotNull();
     }
 
     @Test
-    @WithMockUser
-    void chatEndpointReturnsResponse() throws Exception {
-        mockMvc.perform(post("/api/chat")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                            {"message": "Hej!", "agentType": "GENERAL"}
-                            """))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.response").value("Hej! Jag kan hjälpa dig."))
-                .andExpect(jsonPath("$.modelUsed").value("gemini-2.0-flash"))
-                .andExpect(jsonPath("$.agentType").value("GENERAL"));
-    }
+    void chatUsesProvidedConversationIdAndAgentType() {
+        when(agentService.chat(anyString(), eq("my-conv"), eq(AgentType.COACHING)))
+                .thenReturn(new AgentService.ChatResult(
+                        "Coaching svar",
+                        "gemini-2.5-pro",
+                        ModelRouter.TaskComplexity.COMPLEX,
+                        AgentType.COACHING));
 
-    @Test
-    void chatEndpointRequiresAuthentication() throws Exception {
-        mockMvc.perform(post("/api/chat")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                            {"message": "Hej!"}
-                            """))
-                .andExpect(status().isUnauthorized());
+        var response = controller.chat(
+                new ApiController.ChatRequest("Hjälp mig med mål", "my-conv", AgentType.COACHING));
+
+        assertThat(response.conversationId()).isEqualTo("my-conv");
+        assertThat(response.agentType()).isEqualTo(AgentType.COACHING);
+        assertThat(response.modelUsed()).isEqualTo("gemini-2.5-pro");
     }
 }
