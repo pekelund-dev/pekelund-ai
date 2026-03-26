@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Coach — Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script src="https://unpkg.com/htmx.org@2.0.4" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <span class="sidebar-logo">🎯</span>
+            <h2>AI Coach</h2>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="/" class="nav-item active">
+                <span class="nav-icon">🏠</span>
+                <span>Översikt</span>
+            </a>
+            <div th:each="agent : ${agents}" th:if="${agent.name() != 'GENERAL'}">
+                <a th:href="@{/chat/{type}(type=${agent.name()})}" class="nav-item">
+                    <span class="nav-icon" th:text="${agent.icon}"></span>
+                    <span th:text="${agent.displayName}"></span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <img th:src="${userPicture}" alt="Profilbild" class="user-avatar"
+                     th:if="${userPicture}"/>
+                <span class="user-name" th:text="${userName}">Användare</span>
+            </div>
+            <a href="/logout" class="logout-link">Logga ut</a>
+        </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main-content">
+        <header class="content-header">
+            <h1>Välkommen, <span th:text="${userName}">Användare</span>! 👋</h1>
+            <p>Vad vill du ha hjälp med idag?</p>
+        </header>
+
+        <div class="agent-grid">
+            <div th:each="agent : ${agents}" th:if="${agent.name() != 'GENERAL'}" class="agent-card">
+                <a th:href="@{/chat/{type}(type=${agent.name()})}" class="agent-card-link">
+                    <div class="agent-card-icon" th:text="${agent.icon}"></div>
+                    <h3 th:text="${agent.displayName}">Agent</h3>
+                    <p th:text="${agent.description}">Beskrivning</p>
+                </a>
+            </div>
+        </div>
+
+        <!-- Quick chat -->
+        <section class="quick-chat">
+            <h2>💬 Snabbchatt</h2>
+            <div id="quick-messages" class="messages"
+                 hx-on:htmx:after-swap="this.scrollTop = this.scrollHeight">
+            </div>
+
+            <form hx-post="/chat/GENERAL"
+                  hx-target="#quick-messages"
+                  hx-swap="beforeend"
+                  hx-on:htmx:after-request="resetQuickForm()">
+                <div class="input-row">
+                    <textarea name="message"
+                              id="quick-input"
+                              class="message-input"
+                              placeholder="Ställ en fråga…"
+                              rows="1"
+                              required
+                              autocomplete="off"></textarea>
+                    <button type="submit" class="send-btn" title="Skicka">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        </svg>
+                    </button>
+                </div>
+            </form>
+        </section>
+    </main>
+</div>
+
+<script>
+    function resetQuickForm() {
+        const input = document.getElementById('quick-input');
+        input.value = '';
+        input.style.height = 'auto';
+        input.focus();
+    }
+
+    document.getElementById('quick-input').addEventListener('input', function () {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+
+    document.getElementById('quick-input').addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            this.closest('form').dispatchEvent(
+                new Event('submit', { bubbles: true, cancelable: true })
+            );
+        }
+    });
+</script>
+
+</body>
+</html>

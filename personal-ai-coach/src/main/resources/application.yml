@@ -1,0 +1,78 @@
+spring:
+  application:
+    name: personal-ai-coach
+
+  # ── Security: Google OAuth2 Sign-In ─────────────────────────────────────────
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - openid
+              - profile
+              - email
+
+  # ── Database: PostgreSQL + pgvector ─────────────────────────────────────────
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/coach_db}
+    username: ${DB_USERNAME:coach}
+    password: ${DB_PASSWORD:coach_secret}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  # ── Spring AI: Gemini Configuration ─────────────────────────────────────────
+  ai:
+    google:
+      genai:
+        api-key: ${GEMINI_API_KEY}
+        chat:
+          options:
+            model: gemini-2.0-flash
+            temperature: 0.7
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+        dimensions: 768
+        index-type: HNSW
+
+server:
+  port: 8080
+
+# ── Agent Configuration ─────────────────────────────────────────────────────
+coach:
+  agent:
+    router-model: ${GEMINI_ROUTER_MODEL:gemini-2.0-flash-lite}
+    simple-model: ${GEMINI_SIMPLE_MODEL:gemini-2.0-flash}
+    simple-max-tokens: ${GEMINI_SIMPLE_MAX_TOKENS:1024}
+    complex-model: ${GEMINI_COMPLEX_MODEL:gemini-2.5-pro}
+    complex-max-tokens: ${GEMINI_COMPLEX_MAX_TOKENS:4096}
+  language: sv
+
+# ── Actuator ────────────────────────────────────────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# ── Logging ─────────────────────────────────────────────────────────────────
+logging:
+  level:
+    dev.pekelund: DEBUG
+    org.springframework.ai: INFO
+    org.springframework.security: INFO
