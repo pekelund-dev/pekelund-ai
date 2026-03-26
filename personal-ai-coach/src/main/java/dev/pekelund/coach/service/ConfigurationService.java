@@ -1,7 +1,9 @@
 package dev.pekelund.coach.service;
 
+import dev.pekelund.coach.domain.User;
 import dev.pekelund.coach.domain.UserPreference;
 import dev.pekelund.coach.repository.UserPreferenceRepository;
+import dev.pekelund.coach.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,9 +19,12 @@ import java.util.stream.Collectors;
 public class ConfigurationService {
 
     private final UserPreferenceRepository preferenceRepository;
+    private final UserRepository userRepository;
 
-    public ConfigurationService(UserPreferenceRepository preferenceRepository) {
+    public ConfigurationService(UserPreferenceRepository preferenceRepository,
+                                UserRepository userRepository) {
         this.preferenceRepository = preferenceRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -57,8 +62,11 @@ public class ConfigurationService {
                             preferenceRepository.save(existing);
                         },
                         () -> {
-                            // Need to look up the User entity
+                            User user = userRepository.findById(userId)
+                                    .orElseThrow(() -> new IllegalStateException(
+                                            "User not found: " + userId));
                             var pref = UserPreference.builder()
+                                    .user(user)
                                     .category(category)
                                     .preferenceKey(key)
                                     .preferenceValue(value)
